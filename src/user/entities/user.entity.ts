@@ -2,7 +2,19 @@ export interface User {
   id: string; // uuid v4
   login: string;
   password: string;
-  role: 'admin' | 'editor' | 'viewer';
+  role: UserRole;
   createdAt: number; // timestamp of creation
   updatedAt: number; // timestamp of last update
+}
+
+// export interface CreateUserDto {
+//   login: string;
+//   password: string;
+//   role?: UserRole; // defaults to 'viewer'
+// }
+
+export enum UserRole {
+  ADMIN = 'admin',
+  EDITOR = 'editor',
+  VIEWER = 'viewer',
 }
