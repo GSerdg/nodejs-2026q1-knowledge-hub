@@ -10,6 +10,7 @@ export class UserService {
 
   findAll() {
     return this.db.users.map(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       ({ password, ...userWithoutPassword }) => userWithoutPassword,
     );
   }
@@ -19,6 +20,7 @@ export class UserService {
 
     if (!user) throw new NotFoundException(`User with id ${id} not found`);
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
@@ -37,6 +39,7 @@ export class UserService {
 
     this.db.users.push(userData);
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = userData;
     return userWithoutPassword;
   }
