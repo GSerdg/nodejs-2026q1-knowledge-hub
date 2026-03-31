@@ -4,7 +4,7 @@ import { UserRole } from '../entities/user.entity';
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
-  login: string;
+  login!: string;
 
   @IsString()
   @IsNotEmpty()
@@ -12,9 +12,9 @@ export class CreateUserDto {
    @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/, {
     message: 'Password must contain uppercase, lowercase, numbers and special characters',
   })
-  password: string;
+  password!: string;
 
   @IsEnum(UserRole, { message: 'Role must be admin, editor or viewer' })
   @IsOptional()
-  role?: UserRole = UserRole.VIEWER;
+  role?: UserRole;
 }

@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { v4 as uuid } from 'uuid';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InMemoryDbService } from 'src/db/in-memory-db.service';
 import { User, UserRole } from './entities/user.entity';
 import { randomUUID } from 'node:crypto';
@@ -15,10 +14,19 @@ export class UserService {
     );
   }
 
+  findById(id: string) {
+    const user = this.db.users.find((user) => user.id === id);
+
+    if (!user) throw new NotFoundException(`User with id ${id} not found`);
+
+    const { password, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
   create(dto: CreateUserDto) {
     const id = randomUUID();
     const timestamp = Date.now();
-    
+
     const userData: User = {
       id,
       role: UserRole.VIEWER,
