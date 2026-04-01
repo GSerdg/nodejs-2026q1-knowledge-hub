@@ -61,6 +61,7 @@ export class UserService {
     }
 
     user.password = newPassword;
+    user.updatedAt = Date.now();
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = user;
