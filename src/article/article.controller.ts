@@ -8,18 +8,20 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { ArticleQueryDto } from './dto/article-query.dto';
 
 @Controller('article')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
   @Get()
-  async getAll() {
-    return this.articleService.findAll();
+  async getAll(@Query() query: ArticleQueryDto) {
+    return this.articleService.findAll(query);
   }
 
   @Get(':id')

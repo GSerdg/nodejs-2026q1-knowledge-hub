@@ -76,6 +76,12 @@ export class UserService {
       throw new NotFoundException(`User with id ${id} not found`);
     }
 
+    this.db.articles.forEach((article) => {
+      if (article.authorId === id) {
+        article.authorId = null;
+      }
+    });
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     this.db.users.splice(userIndex, 1);
   }

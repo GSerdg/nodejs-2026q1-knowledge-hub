@@ -1,4 +1,12 @@
-import { IsString, IsNotEmpty, IsEnum, IsUUID, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsEnum,
+  IsUUID,
+  IsArray,
+  IsOptional,
+  ValidateIf,
+} from 'class-validator';
 import { ArticleStatus } from '../entities/article.entity';
 
 export class UpdateArticleDto {
@@ -13,23 +21,24 @@ export class UpdateArticleDto {
   @IsEnum(ArticleStatus, {
     message: 'Status must be draft, published or archived',
   })
-  status!: ArticleStatus;
+  @IsOptional()
+  status?: ArticleStatus;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsUUID('4')
-  authorId!: string;
+  authorId?: string | null;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsUUID('4')
-  categoryId!: string;
+  categoryId?: string | null;
 
   @IsArray({ message: 'Tags must be an array' })
   @IsString({
     each: true,
     message: 'Each tag must be a string',
   })
-  @IsNotEmpty()
-  tags!: string[];
+  @IsOptional()
+  tags?: string[];
 }
