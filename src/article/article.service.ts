@@ -62,7 +62,7 @@ export class ArticleService {
     return articleData;
   }
 
-  update(id: string, updatePasswordDto: UpdateArticleDto) {
+  update(id: string, updateArticleDto: UpdateArticleDto) {
     const articleIndex = this.db.articles.findIndex(
       (article) => article.id === id,
     );
@@ -75,7 +75,7 @@ export class ArticleService {
 
     this.db.articles[articleIndex] = {
       ...article,
-      ...updatePasswordDto,
+      ...updateArticleDto,
       updatedAt: Date.now(),
     };
 

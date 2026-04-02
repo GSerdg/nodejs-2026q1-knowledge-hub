@@ -35,7 +35,7 @@ export class ArticleController {
   }
 
   @Put(':id')
-  async UpdatePassword(
+  async update(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateArticleDto: UpdateArticleDto,
   ) {
