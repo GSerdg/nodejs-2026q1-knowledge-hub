@@ -1,3 +1,6 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { randomUUID } from 'crypto';
+
 export interface Article {
   id: string; // uuid v4
   title: string;
@@ -14,4 +17,36 @@ export enum ArticleStatus {
   DRAFT = 'draft',
   PUBLISHED = 'published',
   ARCHIVED = 'archived',
+}
+
+export class ArticleEntity implements Article {
+  @ApiProperty({ example: randomUUID() })
+  id!: string;
+
+  @ApiProperty({ example: 'Title' })
+  title!: string;
+
+  @ApiProperty({ example: 'Content' })
+  content!: string;
+
+  @ApiProperty({ enum: ArticleStatus, default: ArticleStatus.DRAFT })
+  status!: ArticleStatus;
+
+  @ApiProperty({ example: randomUUID(), nullable: true })
+  authorId!: string | null;
+
+  @ApiProperty({ example: randomUUID(), nullable: true })
+  categoryId!: string | null;
+
+  @ApiProperty({ example: ['tag1', 'tag2'], type: [String] })
+  tags!: string[];
+
+  @ApiProperty({ example: 1712045100000, description: 'Timestamp of creation' })
+  createdAt!: number;
+
+  @ApiProperty({
+    example: 1712045100000,
+    description: 'Timestamp of last update',
+  })
+  updatedAt!: number;
 }

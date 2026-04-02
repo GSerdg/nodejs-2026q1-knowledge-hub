@@ -1,3 +1,6 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { randomUUID } from 'crypto';
+
 export interface User {
   id: string; // uuid v4
   login: string;
@@ -7,14 +10,31 @@ export interface User {
   updatedAt: number; // timestamp of last update
 }
 
-// export interface CreateUserDto {
-//   login: string;
-//   password: string;
-//   role?: UserRole; // defaults to 'viewer'
-// }
-
 export enum UserRole {
   ADMIN = 'admin',
   EDITOR = 'editor',
   VIEWER = 'viewer',
+}
+
+export class UserEntity implements User {
+  @ApiProperty({ example: randomUUID() })
+  id!: string;
+
+  @ApiProperty({ example: 'login' })
+  login!: string;
+
+  @ApiProperty({ example: 'password' })
+  password!: string;
+
+  @ApiProperty({ enum: UserRole, default: UserRole.VIEWER })
+  role!: UserRole;
+
+  @ApiProperty({ example: 1712045100000, description: 'Timestamp of creation' })
+  createdAt!: number;
+
+  @ApiProperty({
+    example: 1712045100000,
+    description: 'Timestamp of last update',
+  })
+  updatedAt!: number;
 }
