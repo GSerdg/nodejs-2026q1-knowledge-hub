@@ -64,6 +64,11 @@ export class CategoryService {
       throw new NotFoundException(`Category with id ${id} not found`);
     }
 
+    this.db.articles.forEach((article) => {
+      if (article.categoryId === id) {
+        article.categoryId = null;
+      }
+    });
     this.db.categories.splice(categoryIndex, 1);
   }
 }

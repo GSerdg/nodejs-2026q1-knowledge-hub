@@ -92,5 +92,8 @@ export class ArticleService {
     }
 
     this.db.articles.splice(articleIndex, 1);
+    this.db.comments = this.db.comments.filter(
+      (comment) => comment.articleId !== id,
+    );
   }
 }
