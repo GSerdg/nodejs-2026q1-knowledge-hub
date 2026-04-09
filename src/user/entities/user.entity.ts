@@ -1,19 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
 import { randomUUID } from 'crypto';
 
 export interface User {
   id: string; // uuid v4
   login: string;
   password: string;
-  role: UserRole;
+  role: Role;
   createdAt: number; // timestamp of creation
   updatedAt: number; // timestamp of last update
-}
-
-export enum UserRole {
-  ADMIN = 'admin',
-  EDITOR = 'editor',
-  VIEWER = 'viewer',
 }
 
 export class UserEntity implements User {
@@ -26,8 +21,8 @@ export class UserEntity implements User {
   @ApiProperty({ example: 'password' })
   password!: string;
 
-  @ApiProperty({ enum: UserRole, default: UserRole.VIEWER })
-  role!: UserRole;
+  @ApiProperty({ enum: Role, default: Role.VIEWER })
+  role!: Role;
 
   @ApiProperty({ example: 1712045100000, description: 'Timestamp of creation' })
   createdAt!: number;

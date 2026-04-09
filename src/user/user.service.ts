@@ -3,50 +3,38 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InMemoryDbService } from 'src/db/in-memory-db.service';
 import { User, UserRole } from './entities/user.entity';
 import { randomUUID } from 'node:crypto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+
+const select = {
+  id: true,
+  login: true,
+  role: true,
+  createdAt: true,
+  updatedAt: true,
+};
 
 @Injectable()
 export class UserService {
-  constructor(private readonly db: InMemoryDbService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.db.users.map(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      ({ password, ...userWithoutPassword }) => userWithoutPassword,
-    );
+  async findAll() {
+    return await this.prisma.user.findMany({ select });
   }
 
-  findById(id: string) {
-    const user = this.db.users.find((user) => user.id === id);
+  async findById(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id }, select });
 
     if (!user) throw new NotFoundException(`User with id ${id} not found`);
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return user;
   }
 
-  create(dto: CreateUserDto) {
-    const id = randomUUID();
-    const timestamp = Date.now();
-
-    const userData: User = {
-      id,
-      role: UserRole.VIEWER,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      ...dto,
-    };
-
-    this.db.users.push(userData);
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...userWithoutPassword } = userData;
-    return userWithoutPassword;
+  async create(dto: CreateUserDto) {
+    return await this.prisma.user.create({ data: dto, select });
   }
 
   updatePassword(id: string, updatePasswordDto: UpdatePasswordDto) {

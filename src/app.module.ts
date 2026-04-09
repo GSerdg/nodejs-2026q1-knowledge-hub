@@ -4,8 +4,16 @@ import { DbModule } from './db/db.module';
 import { ArticleModule } from './article/article.module';
 import { CategoryModule } from './category/category.module';
 import { CommentModule } from './comment/comment.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
-  imports: [UserModule, ArticleModule, CategoryModule, CommentModule, DbModule],
+  imports: [
+    UserModule,
+    ArticleModule,
+    CategoryModule,
+    CommentModule,
+    DbModule,
+    PrismaModule,
+  ],
 })
 export class AppModule {}

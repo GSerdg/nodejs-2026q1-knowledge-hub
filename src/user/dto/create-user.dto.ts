@@ -5,8 +5,8 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
-import { UserRole } from '../entities/user.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
 
 export class CreateUserDto {
   @ApiProperty()
@@ -20,8 +20,8 @@ export class CreateUserDto {
   @MinLength(4, { message: 'Password must be at least 4 characters long' })
   password!: string;
 
-  @ApiPropertyOptional({ enum: UserRole })
-  @IsEnum(UserRole, { message: 'Role must be admin, editor or viewer' })
+  @ApiPropertyOptional({ enum: Role })
+  @IsEnum(Role, { message: 'Role must be admin, editor or viewer' })
   @IsOptional()
-  role?: UserRole;
+  role?: Role;
 }
