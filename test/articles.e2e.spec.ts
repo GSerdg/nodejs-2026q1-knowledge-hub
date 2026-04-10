@@ -7,11 +7,14 @@ import {
   removeTokenUser,
 } from './utils';
 import { articlesRoutes, categoriesRoutes, commentsRoutes } from './endpoints';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 const createArticleDto = {
   title: 'TEST_ARTICLE',
   content: 'Test article content',
-  status: 'draft',
+  status: 'DRAFT',
   authorId: null,
   categoryId: null,
   tags: [],
@@ -46,6 +49,12 @@ describe('Article (e2e)', () => {
     if (commonHeaders['Authorization']) {
       delete commonHeaders['Authorization'];
     }
+  });
+
+  beforeEach(async () => {
+    await prisma.article.deleteMany({});
+    await prisma.category.deleteMany({});
+    await prisma.tag.deleteMany({});
   });
 
   describe('GET', () => {
@@ -104,7 +113,7 @@ describe('Article (e2e)', () => {
       const draftArticle = await unauthorizedRequest
         .post(articlesRoutes.create)
         .set(commonHeaders)
-        .send({ ...createArticleDto, status: 'draft' });
+        .send({ ...createArticleDto, status: 'DRAFT' });
 
       expect(draftArticle.status).toBe(StatusCodes.CREATED);
       const { id: draftId } = draftArticle.body;
@@ -115,14 +124,14 @@ describe('Article (e2e)', () => {
         .send({
           ...createArticleDto,
           title: 'PUBLISHED_ARTICLE',
-          status: 'published',
+          status: 'PUBLISHED',
         });
 
       expect(publishedArticle.status).toBe(StatusCodes.CREATED);
       const { id: publishedId } = publishedArticle.body;
 
       const response = await unauthorizedRequest
-        .get(`${articlesRoutes.getAll}?status=draft`)
+        .get(`${articlesRoutes.getAll}?status=DRAFT`)
         .set(commonHeaders);
 
       expect(response.status).toBe(StatusCodes.OK);
@@ -344,7 +353,7 @@ describe('Article (e2e)', () => {
         .send({
           title: updatedTitle,
           content: updatedContent,
-          status: 'published',
+          status: 'PUBLISHED',
           categoryId: updateCategoryId,
           tags: ['updated'],
         });
@@ -366,7 +375,7 @@ describe('Article (e2e)', () => {
 
       expect(title).toBe(updatedTitle);
       expect(content).toBe(updatedContent);
-      expect(status).toBe('published');
+      expect(status).toBe('PUBLISHED');
       expect(categoryId).toBe(updateCategoryId);
       expect(tags).toContain('updated');
       expect(validate(updatedId)).toBe(true);

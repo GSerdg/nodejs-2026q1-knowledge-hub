@@ -7,6 +7,9 @@ import {
   removeTokenUser,
 } from './utils';
 import { categoriesRoutes, articlesRoutes } from './endpoints';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 const createCategoryDto = {
   name: 'TEST_CATEGORY',
@@ -38,6 +41,10 @@ describe('Category (e2e)', () => {
     if (commonHeaders['Authorization']) {
       delete commonHeaders['Authorization'];
     }
+  });
+
+  beforeEach(async () => {
+    await prisma.category.deleteMany({});
   });
 
   describe('GET', () => {
@@ -280,7 +287,7 @@ describe('Category (e2e)', () => {
       const createArticleDto = {
         title: 'TEST_ARTICLE',
         content: 'Test content',
-        status: 'draft',
+        status: 'DRAFT',
         authorId: null,
         categoryId,
         tags: [],

@@ -7,6 +7,7 @@ import {
   removeTokenUser,
 } from './utils';
 import { usersRoutes, articlesRoutes, commentsRoutes } from './endpoints';
+import { PrismaClient } from '@prisma/client';
 
 const createUserDto = {
   login: 'TEST_LOGIN',
@@ -15,6 +16,8 @@ const createUserDto = {
 
 // Probability of collisions for UUID is almost zero
 const randomUUID = '0a35dd62-e09f-444b-a628-f4e7c6954f57';
+
+const prisma = new PrismaClient();
 
 describe('Users (e2e)', () => {
   const unauthorizedRequest = request;
@@ -38,6 +41,11 @@ describe('Users (e2e)', () => {
     if (commonHeaders['Authorization']) {
       delete commonHeaders['Authorization'];
     }
+  });
+
+  beforeEach(async () => {
+    await prisma.user.deleteMany({});
+    await prisma.article.deleteMany({});
   });
 
   describe('GET', () => {
@@ -104,7 +112,7 @@ describe('Users (e2e)', () => {
       expect(login).toBe(createUserDto.login);
       expect(response.body).not.toHaveProperty('password');
       expect(validate(id)).toBe(true);
-      expect(role).toBe('viewer');
+      expect(role).toBe('VIEWER');
       expect(typeof createdAt).toBe('number');
       expect(typeof updatedAt).toBe('number');
       expect(createdAt === updatedAt).toBe(true);
@@ -290,7 +298,7 @@ describe('Users (e2e)', () => {
       const createArticleDto = {
         title: 'TEST_ARTICLE',
         content: 'Test content',
-        status: 'draft',
+        status: 'DRAFT',
         authorId: userId,
         categoryId: null,
         tags: [],

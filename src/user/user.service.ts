@@ -10,6 +10,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { Prisma } from '@prisma/client';
 import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
+import { convertTimestamp } from 'src/utils/convertTimestamp';
 
 const select = {
   id: true,
@@ -24,7 +25,9 @@ export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll() {
-    return await this.prisma.user.findMany({ select });
+    const users = await this.prisma.user.findMany({ select });
+
+    return convertTimestamp(users);
   }
 
   async findById(id: string) {
@@ -32,17 +35,19 @@ export class UserService {
 
     if (!user) throw new NotFoundException(`User with id ${id} not found`);
 
-    return user;
+    return convertTimestamp(user);
   }
 
   async create(dto: CreateUserDto) {
     try {
       const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-      return await this.prisma.user.create({
+      const user = await this.prisma.user.create({
         data: { ...dto, password: hashedPassword },
         select,
       });
+
+      return convertTimestamp(user);
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
@@ -70,11 +75,13 @@ export class UserService {
       throw new ForbiddenException(`Wrong password`);
     }
 
-    return await this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id },
       data: { password: await bcrypt.hash(newPassword, 10) },
       select,
     });
+
+    return convertTimestamp(updatedUser);
   }
 
   async delete(id: string) {
@@ -84,7 +91,7 @@ export class UserService {
         select,
       });
 
-      return deletedUser;
+      return convertTimestamp(deletedUser);
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === PRISMA_ERROR_CODES.NOT_FOUND) {

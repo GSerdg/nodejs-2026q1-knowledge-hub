@@ -7,6 +7,9 @@ import {
   removeTokenUser,
 } from './utils';
 import { commentsRoutes, articlesRoutes } from './endpoints';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 // Probability of collisions for UUID is almost zero
 const randomUUID = '0a35dd62-e09f-444b-a628-f4e7c6954f57';
@@ -31,7 +34,7 @@ describe('Comments (e2e)', () => {
       .send({
         title: 'TEST_ARTICLE_FOR_COMMENTS',
         content: 'Test content',
-        status: 'draft',
+        status: 'DRAFT',
         authorId: null,
         categoryId: null,
         tags: [],
@@ -56,6 +59,10 @@ describe('Comments (e2e)', () => {
     if (commonHeaders['Authorization']) {
       delete commonHeaders['Authorization'];
     }
+  });
+
+  beforeEach(async () => {
+    await prisma.comment.deleteMany({});
   });
 
   describe('GET', () => {
@@ -122,7 +129,7 @@ describe('Comments (e2e)', () => {
         .send({
           title: 'ANOTHER_ARTICLE',
           content: 'Another content',
-          status: 'draft',
+          status: 'DRAFT',
           authorId: null,
           categoryId: null,
           tags: [],

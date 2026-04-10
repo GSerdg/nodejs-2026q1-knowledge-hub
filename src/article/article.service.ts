@@ -5,6 +5,7 @@ import { ArticleQueryDto } from './dto/article-query.dto';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
+import { convertTimestamp } from 'src/utils/convertTimestamp';
 
 @Injectable()
 export class ArticleService {
@@ -13,7 +14,7 @@ export class ArticleService {
   async findAll(query: ArticleQueryDto) {
     const { status, categoryId, tag } = query;
 
-    return await this.prisma.article.findMany({
+    const articles = await this.prisma.article.findMany({
       where: {
         status,
         categoryId,
@@ -25,17 +26,35 @@ export class ArticleService {
             }
           : undefined,
       },
+      include: {
+        tags: true,
+      },
     });
+
+    return convertTimestamp(articles).map((art: any) => ({
+      ...art,
+      tags: art.tags.map((t: any) => t.name),
+    }));
   }
 
   async findById(id: string) {
-    const article = await this.prisma.article.findUnique({ where: { id } });
+    const article = await this.prisma.article.findUnique({
+      where: { id },
+      include: {
+        tags: true,
+      },
+    });
 
     if (!article) {
       throw new NotFoundException(`Article with id ${id} not found`);
     }
 
-    return article;
+    const converted = convertTimestamp(article);
+
+    return {
+      ...converted,
+      tags: converted.tags.map((t: any) => t.name),
+    };
   }
 
   async create(dto: CreateArticleDto) {
@@ -52,7 +71,19 @@ export class ArticleService {
       },
     };
 
-    return await this.prisma.article.create({ data });
+    const article = await this.prisma.article.create({
+      data,
+      include: {
+        tags: true,
+      },
+    });
+
+    const converted = convertTimestamp(article);
+
+    return {
+      ...converted,
+      tags: converted.tags.map((t: any) => t.name),
+    };
   }
 
   async update(id: string, dto: UpdateArticleDto) {
@@ -68,10 +99,20 @@ export class ArticleService {
         },
       };
 
-      return await this.prisma.article.update({
+      const article = await this.prisma.article.update({
         where: { id },
         data,
+        include: {
+          tags: true,
+        },
       });
+
+      const converted = convertTimestamp(article);
+
+      return {
+        ...converted,
+        tags: converted.tags.map((t: any) => t.name),
+      };
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === PRISMA_ERROR_CODES.NOT_FOUND) {
@@ -85,7 +126,19 @@ export class ArticleService {
 
   async delete(id: string) {
     try {
-      return await this.prisma.article.delete({ where: { id } });
+      const article = await this.prisma.article.delete({
+        where: { id },
+        include: {
+          tags: true,
+        },
+      });
+
+      const converted = convertTimestamp(article);
+
+      return {
+        ...converted,
+        tags: converted.tags.map((t: any) => t.name),
+      };
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === PRISMA_ERROR_CODES.NOT_FOUND) {
