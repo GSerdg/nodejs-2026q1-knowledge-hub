@@ -28,7 +28,7 @@ export class CategoryController {
     type: [CategoryEntity],
   })
   async getAll() {
-    return this.categoryService.findAll();
+    return await this.categoryService.findAll();
   }
 
   @Get(':id')
@@ -42,7 +42,7 @@ export class CategoryController {
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Category not found' })
   async findById(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    return this.categoryService.findById(id);
+    return await this.categoryService.findById(id);
   }
 
   @Post()
@@ -54,7 +54,7 @@ export class CategoryController {
   })
   @ApiResponse({ status: 400, description: 'Missing required fields' })
   async create(@Body() categoryData: CreateCategoryDto) {
-    return this.categoryService.create(categoryData);
+    return await this.categoryService.create(categoryData);
   }
 
   @Put(':id')
@@ -71,7 +71,7 @@ export class CategoryController {
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
   ) {
-    return this.categoryService.update(id, updateCategoryDto);
+    return await this.categoryService.update(id, updateCategoryDto);
   }
 
   @Delete(':id')
@@ -83,6 +83,6 @@ export class CategoryController {
   @ApiResponse({ status: 404, description: 'Category not found' })
   @HttpCode(204)
   async delete(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    this.categoryService.delete(id);
+    return await this.categoryService.delete(id);
   }
 }
