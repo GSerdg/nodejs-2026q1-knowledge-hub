@@ -34,7 +34,7 @@ export class CommentController {
   async findAllByArticleId(@Query() query: GetCommentsQueryDto) {
     const { articleId } = query;
 
-    return this.commentService.findAllByArticleId(articleId);
+    return await this.commentService.findAllByArticleId(articleId);
   }
 
   @Get(':id')
@@ -48,7 +48,7 @@ export class CommentController {
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Comment not found' })
   async findById(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    return this.commentService.findById(id);
+    return await this.commentService.findById(id);
   }
 
   @Post()
@@ -64,7 +64,7 @@ export class CommentController {
     description: 'Article with provided articleId does not exist',
   })
   async create(@Body() commentData: CreateCommentDto) {
-    return this.commentService.create(commentData);
+    return await this.commentService.create(commentData);
   }
 
   @Delete(':id')
@@ -75,6 +75,6 @@ export class CommentController {
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Comment not found' })
   async delete(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    this.commentService.delete(id);
+    return await this.commentService.delete(id);
   }
 }

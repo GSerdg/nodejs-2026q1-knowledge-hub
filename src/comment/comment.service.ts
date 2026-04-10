@@ -1,19 +1,15 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
-import { randomUUID } from 'node:crypto';
-import { InMemoryDbService } from 'src/db/in-memory-db.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
-import { Comment } from './entities/comment.entity';
 
 @Injectable()
 export class CommentService {
-  constructor(private readonly db: InMemoryDbService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  findById(id: string) {
-    const comment = this.db.comments.find((comment) => comment.id === id);
+  async findById(id: string) {
+    const comment = await this.prisma.comment.findUnique({ where: { id } });
 
     if (!comment) {
       throw new NotFoundException(`Comment with id ${id} not found`);
@@ -22,45 +18,53 @@ export class CommentService {
     return comment;
   }
 
-  findAllByArticleId(articleId: string) {
-    const comments = this.db.comments.filter(
-      (comment) => comment.articleId === articleId,
-    );
-
-    return comments;
+  async findAllByArticleId(articleId: string) {
+    return await this.prisma.comment.findMany({ where: { articleId } });
   }
 
-  create(dto: CreateCommentDto) {
-    const id = randomUUID();
-    const createdAt = Date.now();
+  async create(dto: CreateCommentDto) {
+    try {
+      const data: Prisma.CommentUncheckedCreateInput = {
+        ...dto,
+        authorId: dto.authorId ?? null,
+      };
+      return await this.prisma.comment.create({ data });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === PRISMA_ERROR_CODES.FOREIGN_KEY_CONSTRAINT) {
+          const target = (error.meta?.field_name as string) || '';
 
-    if (!this.db.articles.some((article) => article.id === dto.articleId)) {
-      throw new UnprocessableEntityException(
-        `Article with id ${dto.articleId} does not exist`,
-      );
+          if (target.includes('authorId')) {
+            throw new NotFoundException(
+              `User with id ${dto.authorId} does not exist`,
+            );
+          }
+
+          if (target.includes('articleId')) {
+            throw new NotFoundException(
+              `Article with id ${dto.articleId} does not exist`,
+            );
+          }
+
+          throw new NotFoundException('Related record not found');
+        }
+      }
+
+      throw error;
     }
-
-    const commentData: Comment = {
-      id,
-      createdAt,
-      authorId: null,
-      ...dto,
-    };
-
-    this.db.comments.push(commentData);
-
-    return commentData;
   }
 
-  delete(id: string) {
-    const commentIndex = this.db.comments.findIndex(
-      (comment) => comment.id === id,
-    );
+  async delete(id: string) {
+    try {
+      return await this.prisma.comment.delete({ where: { id } });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === PRISMA_ERROR_CODES.NOT_FOUND) {
+          throw new NotFoundException(`Comment with id ${id} not found`);
+        }
+      }
 
-    if (commentIndex === -1) {
-      throw new NotFoundException(`Comment with id ${id} not found`);
+      throw error;
     }
-
-    this.db.comments.splice(commentIndex, 1);
   }
 }

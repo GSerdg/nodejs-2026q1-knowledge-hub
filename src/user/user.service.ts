@@ -9,6 +9,7 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { Prisma } from '@prisma/client';
+import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
 
 const select = {
   id: true,
@@ -86,7 +87,7 @@ export class UserService {
       return deletedUser;
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2025') {
+        if (error.code === PRISMA_ERROR_CODES.NOT_FOUND) {
           throw new NotFoundException(`User with id ${id} not found`);
         }
       }

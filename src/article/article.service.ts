@@ -4,6 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { ArticleQueryDto } from './dto/article-query.dto';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
 
 @Injectable()
 export class ArticleService {
@@ -73,7 +74,7 @@ export class ArticleService {
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2025') {
+        if (error.code === PRISMA_ERROR_CODES.NOT_FOUND) {
           throw new NotFoundException(`Article with id ${id} not found`);
         }
       }
@@ -87,7 +88,7 @@ export class ArticleService {
       return await this.prisma.article.delete({ where: { id } });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2025') {
+        if (error.code === PRISMA_ERROR_CODES.NOT_FOUND) {
           throw new NotFoundException(`Article with id ${id} not found`);
         }
       }
