@@ -1,13 +1,14 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { User, UserRole } from './entities/user.entity';
-import { randomUUID } from 'node:crypto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import * as bcrypt from 'bcrypt';
+import { Prisma } from '@prisma/client';
 
 const select = {
   id: true,
@@ -34,44 +35,63 @@ export class UserService {
   }
 
   async create(dto: CreateUserDto) {
-    return await this.prisma.user.create({ data: dto, select });
+    try {
+      const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+      return await this.prisma.user.create({
+        data: { ...dto, password: hashedPassword },
+        select,
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new ConflictException(
+            `User with this login: ${dto.login} already exists`,
+          );
+        }
+      }
+
+      throw error;
+    }
   }
 
-  updatePassword(id: string, updatePasswordDto: UpdatePasswordDto) {
-    const user = this.db.users.find((user) => user.id === id);
+  async updatePassword(id: string, updatePasswordDto: UpdatePasswordDto) {
     const { newPassword, oldPassword } = updatePasswordDto;
+
+    const user = await this.prisma.user.findUnique({ where: { id } });
 
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    if (user.password !== oldPassword) {
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
       throw new ForbiddenException(`Wrong password`);
     }
 
-    user.password = newPassword;
-    user.updatedAt = Date.now();
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...userWithoutPassword } = user;
-
-    return userWithoutPassword;
+    return await this.prisma.user.update({
+      where: { id },
+      data: { password: await bcrypt.hash(newPassword, 10) },
+      select,
+    });
   }
 
-  delete(id: string) {
-    const userIndex = this.db.users.findIndex((user) => user.id === id);
+  async delete(id: string) {
+    try {
+      const deletedUser = await this.prisma.user.delete({
+        where: { id },
+        select,
+      });
 
-    if (userIndex === -1) {
-      throw new NotFoundException(`User with id ${id} not found`);
-    }
-
-    this.db.comments = this.db.comments.filter(
-      (comment) => comment.authorId !== id,
-    );
-    this.db.articles.forEach((article) => {
-      if (article.authorId === id) {
-        article.authorId = null;
+      return deletedUser;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundException(`User with id ${id} not found`);
+        }
       }
-    });
-    this.db.users.splice(userIndex, 1);
+
+      throw error;
+    }
   }
 }
