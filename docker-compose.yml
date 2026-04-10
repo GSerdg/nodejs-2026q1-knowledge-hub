@@ -12,7 +12,7 @@ services:
       - .env
     environment:
       - NODE_ENV=production
-      - POSTGRES_HOST=db
+      - IS_DOCKER=true
     depends_on:
       db:
         condition: service_healthy
