@@ -30,7 +30,7 @@ export class ArticleController {
     type: [ArticleEntity],
   })
   async getAll(@Query() query: ArticleQueryDto) {
-    return this.articleService.findAll(query);
+    return await this.articleService.findAll(query);
   }
 
   @Get(':id')
@@ -44,7 +44,7 @@ export class ArticleController {
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Article not found' })
   async findById(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    return this.articleService.findById(id);
+    return await this.articleService.findById(id);
   }
 
   @Post()
@@ -56,7 +56,7 @@ export class ArticleController {
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
   async create(@Body() articleData: CreateArticleDto) {
-    return this.articleService.create(articleData);
+    return await this.articleService.create(articleData);
   }
 
   @Put(':id')
@@ -73,7 +73,7 @@ export class ArticleController {
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateArticleDto: UpdateArticleDto,
   ) {
-    return this.articleService.update(id, updateArticleDto);
+    return await this.articleService.update(id, updateArticleDto);
   }
 
   @Delete(':id')
@@ -84,6 +84,6 @@ export class ArticleController {
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Article not found' })
   async delete(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    this.articleService.delete(id);
+    return await this.articleService.delete(id);
   }
 }

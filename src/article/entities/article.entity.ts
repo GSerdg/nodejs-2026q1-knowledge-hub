@@ -1,22 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Status } from '@prisma/client';
 import { randomUUID } from 'crypto';
 
 export interface Article {
   id: string; // uuid v4
   title: string;
   content: string;
-  status: ArticleStatus;
+  status: Status;
   authorId: string | null; // refers to User
   categoryId: string | null; // refers to Category
   tags: string[]; // array of tag names
   createdAt: number; // timestamp of creation
   updatedAt: number; // timestamp of last update
-}
-
-export enum ArticleStatus {
-  DRAFT = 'draft',
-  PUBLISHED = 'published',
-  ARCHIVED = 'archived',
 }
 
 export class ArticleEntity implements Article {
@@ -29,8 +24,8 @@ export class ArticleEntity implements Article {
   @ApiProperty({ example: 'Content' })
   content!: string;
 
-  @ApiProperty({ enum: ArticleStatus, default: ArticleStatus.DRAFT })
-  status!: ArticleStatus;
+  @ApiProperty({ enum: Status, default: Status.DRAFT })
+  status!: Status;
 
   @ApiProperty({ example: randomUUID(), nullable: true })
   authorId!: string | null;

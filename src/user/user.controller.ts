@@ -28,7 +28,7 @@ export class UserController {
     type: [UserEntity],
   })
   async getAll() {
-    return this.userService.findAll();
+    return await this.userService.findAll();
   }
 
   @Get(':id')
@@ -42,7 +42,7 @@ export class UserController {
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async findById(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    return this.userService.findById(id);
+    return await this.userService.findById(id);
   }
 
   @Post()
@@ -50,7 +50,7 @@ export class UserController {
   @ApiResponse({ status: 201, description: 'User created', type: UserEntity })
   @ApiResponse({ status: 400, description: 'Missing required fields' })
   async create(@Body() userData: CreateUserDto) {
-    return this.userService.create(userData);
+    return await this.userService.create(userData);
   }
 
   @Put(':id')
@@ -68,7 +68,7 @@ export class UserController {
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
-    return this.userService.updatePassword(id, updatePasswordDto);
+    return await this.userService.updatePassword(id, updatePasswordDto);
   }
 
   @Delete(':id')
@@ -79,6 +79,6 @@ export class UserController {
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async delete(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    this.userService.delete(id);
+    return await this.userService.delete(id);
   }
 }

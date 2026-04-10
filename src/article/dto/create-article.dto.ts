@@ -7,9 +7,9 @@ import {
   IsUUID,
   ValidateIf,
 } from 'class-validator';
-import { ArticleStatus } from '../entities/article.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { randomUUID } from 'node:crypto';
+import { Status } from '@prisma/client';
 
 export class CreateArticleDto {
   @ApiProperty({ example: 'Title' })
@@ -22,12 +22,12 @@ export class CreateArticleDto {
   @IsNotEmpty()
   content!: string;
 
-  @ApiPropertyOptional({ enum: ArticleStatus })
-  @IsEnum(ArticleStatus, {
+  @ApiPropertyOptional({ enum: Status })
+  @IsEnum(Status, {
     message: 'Status must be draft, published or archived',
   })
   @IsOptional()
-  status?: ArticleStatus;
+  status?: Status;
 
   @ApiPropertyOptional({ example: randomUUID(), nullable: true })
   @IsOptional()
