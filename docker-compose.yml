@@ -13,13 +13,15 @@ services:
     environment:
       - NODE_ENV=production
       - IS_DOCKER=true
+      # - POSTGRES_HOST=db
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}?schema=public
     depends_on:
       db:
         condition: service_healthy
     networks:
       - kh-network
     healthcheck:
-      test: curl -f http://localhost:${PORT:-4000}/ || exit 1
+      test: curl -f http://localhost:${PORT:-4000}/user || exit 1
       interval: 30s
       timeout: 10s
       retries: 3

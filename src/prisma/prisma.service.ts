@@ -18,9 +18,13 @@ export class PrismaService
 
     const isDocker =
       existsSync('/.dockerenv') || process.env.IS_DOCKER === 'true';
-    const host = isDocker ? POSTGRES_HOST : 'localhost';
+    const host = isDocker
+      ? POSTGRES_HOST || 'db'
+      : POSTGRES_HOST || 'localhost';
 
-    const dbUrl = `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${host}:${POSTGRES_PORT}/${POSTGRES_DB}?schema=public`;
+    const dbUrl =
+      process.env.DATABASE_URL ||
+      `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${host}:${POSTGRES_PORT}/${POSTGRES_DB}?schema=public`;
 
     super({
       datasources: {

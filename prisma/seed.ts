@@ -81,7 +81,7 @@ async function main() {
     },
   });
 
-  await prisma.article.create({
+  const art5 = await prisma.article.create({
     data: {
       title: 'New Knowledge Hub Release',
       content: 'Version 2.0 with PostgreSQL is finally here!',
@@ -91,8 +91,23 @@ async function main() {
       tags: { connect: [{ id: tags[2].id }, { id: tags[3].id }] },
     },
   });
+
   await prisma.comment.create({
     data: { content: 'Very helpful!', authorId: editor.id, articleId: art1.id },
+  });
+  await prisma.comment.create({
+    data: {
+      content: 'Great write-up, thanks!',
+      authorId: admin.id,
+      articleId: art5.id,
+    },
+  });
+  await prisma.comment.create({
+    data: {
+      content: 'Looking forward to more content.',
+      authorId: editor.id,
+      articleId: art5.id,
+    },
   });
 
   console.log('✅ Seed data created successfully!');
