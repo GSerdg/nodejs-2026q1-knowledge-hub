@@ -4,6 +4,13 @@ import * as bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
+  const usersCount = await prisma.user.count();
+
+  if (usersCount > 0) {
+    console.log('--- Database already has data. Skipping seed. ---');
+    return;
+  }
+
   await prisma.comment.deleteMany();
   await prisma.article.deleteMany();
   await prisma.tag.deleteMany();
