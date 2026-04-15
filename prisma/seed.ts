@@ -1,5 +1,5 @@
 import { PrismaClient, Role, Status } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import { PasswordService } from 'src/common/password.service';
 
 const prisma = new PrismaClient();
 
@@ -17,7 +17,7 @@ async function main() {
   await prisma.category.deleteMany();
   await prisma.user.deleteMany();
 
-  const passwordHash = await bcrypt.hash('password123', 10);
+  const passwordHash = await PasswordService.hash('password123');
 
   const admin = await prisma.user.create({
     data: { login: 'admin', password: passwordHash, role: Role.ADMIN },
