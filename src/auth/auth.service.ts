@@ -1,16 +1,14 @@
 import {
-  ConflictException,
+  BadRequestException,
   ForbiddenException,
   Injectable,
-  NotFoundException,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdatePasswordDto } from './dto/update-password.dto';
+import { SignupDto } from './dto/signup.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
-import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
+import { Prisma, Role, User } from '@prisma/client';
 import { convertTimestamp } from 'src/utils/convertTimestamp';
 import { PasswordService } from 'src/common/password.service';
+import { JwtService } from '@nestjs/jwt';
 
 const select = {
   id: true,
@@ -21,29 +19,39 @@ const select = {
 };
 
 @Injectable()
-export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+export class AuthService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+  ) {}
 
-  async findAll() {
-    const users = await this.prisma.user.findMany({ select });
+  async generateTokens(user: User) {
+    const payload = {
+      userId: user.id,
+      login: user.login,
+      role: user.role,
+    };
 
-    return convertTimestamp(users);
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload, {
+        secret: process.env.JWT_SECRET,
+        expiresIn: process.env.JWT_ACCESS_TTL,
+      }),
+      this.jwtService.signAsync(payload, {
+        secret: process.env.JWT_REFRESH_SECRET,
+        expiresIn: process.env.JWT_REFRESH_TTL,
+      }),
+    ]);
+
+    return { accessToken, refreshToken };
   }
 
-  async findById(id: string) {
-    const user = await this.prisma.user.findUnique({ where: { id }, select });
-
-    if (!user) throw new NotFoundException(`User with id ${id} not found`);
-
-    return convertTimestamp(user);
-  }
-
-  async create(dto: CreateUserDto) {
+  async create(dto: SignupDto) {
     try {
       const hashedPassword = await PasswordService.hash(dto.password);
 
       const user = await this.prisma.user.create({
-        data: { ...dto, password: hashedPassword },
+        data: { ...dto, password: hashedPassword, role: Role.VIEWER },
         select,
       });
 
@@ -51,7 +59,7 @@ export class UserService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
-          throw new ConflictException(
+          throw new BadRequestException(
             `User with this login: ${dto.login} already exists`,
           );
         }
@@ -61,45 +69,18 @@ export class UserService {
     }
   }
 
-  async updatePassword(id: string, updatePasswordDto: UpdatePasswordDto) {
-    const { newPassword, oldPassword } = updatePasswordDto;
-
-    const user = await this.prisma.user.findUnique({ where: { id } });
-
-    if (!user) {
-      throw new NotFoundException(`User with id ${id} not found`);
-    }
-
-    const isMatch = await PasswordService.compare(oldPassword, user.password);
-    if (!isMatch) {
-      throw new ForbiddenException(`Wrong password`);
-    }
-
-    const updatedUser = await this.prisma.user.update({
-      where: { id },
-      data: { password: await PasswordService.hash(newPassword) },
-      select,
+  async login(dto: SignupDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { login: dto.login },
     });
 
-    return convertTimestamp(updatedUser);
-  }
-
-  async delete(id: string) {
-    try {
-      const deletedUser = await this.prisma.user.delete({
-        where: { id },
-        select,
-      });
-
-      return convertTimestamp(deletedUser);
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === PRISMA_ERROR_CODES.NOT_FOUND) {
-          throw new NotFoundException(`User with id ${id} not found`);
-        }
-      }
-
-      throw error;
+    if (
+      !user ||
+      !(await PasswordService.compare(dto.password, user.password))
+    ) {
+      throw new ForbiddenException('Unknown login or password');
     }
+
+    return await this.generateTokens(user);
   }
 }
