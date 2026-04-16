@@ -3,12 +3,14 @@ import { AuthService } from './auth.service';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SignupDto } from './dto/signup.dto';
 import { RefreshDto } from './dto/refresh.dto';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('auth/signup')
 @Controller('auth/signup')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post()
   @ApiOperation({ summary: 'Signup user' })
   @ApiResponse({ status: 201, description: 'Signup user ', type: SignupDto })
@@ -17,6 +19,7 @@ export class AuthController {
     return await this.authService.create(userData);
   }
 
+  @Public()
   @Post()
   @ApiOperation({ summary: 'Login user' })
   @ApiResponse({
@@ -29,6 +32,7 @@ export class AuthController {
     return await this.authService.login(userData);
   }
 
+  @Public()
   @Post()
   @ApiOperation({ summary: 'Refresh token' })
   @ApiResponse({
