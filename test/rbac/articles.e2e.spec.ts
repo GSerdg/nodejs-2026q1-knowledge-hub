@@ -7,6 +7,9 @@ import {
   removeTokenUser,
 } from '../utils';
 import { articlesRoutes } from '../endpoints';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 const createArticleDto = {
   title: 'TEST_RBAC_ARTICLE',
@@ -31,10 +34,26 @@ describe('RBAC - Articles (e2e)', () => {
   let viewerUserId: string;
 
   beforeAll(async () => {
+    await prisma.user.deleteMany({});
+
     if (!shouldAuthorizationBeTested) return;
 
     const adminResult = await getTokenAndUserId(request);
-    adminHeaders = { ...headers, Authorization: adminResult.token };
+
+    await prisma.user.update({
+      where: { id: adminResult.mockUserId },
+      data: { role: 'admin' },
+    });
+
+    const loginRes = await request.post('/auth/login').send({
+      login: adminResult.login,
+      password: 'Tu6!@#%&', // пароль из твоего getTokenAndUserId
+    });
+
+    adminHeaders = {
+      ...headers,
+      Authorization: `Bearer ${loginRes.body.accessToken}`,
+    };
     adminUserId = adminResult.mockUserId;
 
     const editorResult = await getUserTokenByRole(

@@ -58,7 +58,6 @@ export class AuthController {
     description: 'Refresh token is invalid or expired',
   })
   async refresh(@Body() data: RefreshDto) {
-    console.log('CONTROLLER: Inside refresh with data:', data);
     return await this.authService.refresh(data);
   }
 }

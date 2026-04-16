@@ -7,6 +7,9 @@ import {
   removeTokenUser,
 } from '../utils';
 import { categoriesRoutes } from '../endpoints';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 const createCategoryDto = {
   name: 'TEST_RBAC_CATEGORY',
@@ -27,6 +30,8 @@ describe('RBAC - Categories (e2e)', () => {
   let viewerUserId: string;
 
   beforeAll(async () => {
+    await prisma.user.deleteMany({});
+
     if (!shouldAuthorizationBeTested) return;
 
     // Create admin user

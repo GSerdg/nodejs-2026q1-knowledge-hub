@@ -7,6 +7,9 @@ import {
   removeTokenUser,
 } from '../utils';
 import { usersRoutes } from '../endpoints';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 const createUserDto = {
   login: 'TEST_RBAC_NEW_USER',
@@ -27,6 +30,8 @@ describe('RBAC - Users (e2e)', () => {
   let viewerUserId: string;
 
   beforeAll(async () => {
+    await prisma.user.deleteMany({});
+
     if (!shouldAuthorizationBeTested) return;
 
     const adminResult = await getTokenAndUserId(request);

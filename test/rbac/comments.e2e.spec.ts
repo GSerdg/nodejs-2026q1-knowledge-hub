@@ -7,6 +7,9 @@ import {
   removeTokenUser,
 } from '../utils';
 import { commentsRoutes, articlesRoutes } from '../endpoints';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 // Probability of collisions for UUID is almost zero
 const randomUUID = '0a35dd62-e09f-444b-a628-f4e7c6954f57';
@@ -23,6 +26,8 @@ describe('RBAC - Comments (e2e)', () => {
   let testArticleId: string;
 
   beforeAll(async () => {
+    await prisma.user.deleteMany({});
+
     if (!shouldAuthorizationBeTested) return;
 
     const adminResult = await getTokenAndUserId(request);

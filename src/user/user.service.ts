@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdatePasswordDto } from './dto/update-password.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
@@ -61,8 +61,8 @@ export class UserService {
     }
   }
 
-  async updatePassword(id: string, updatePasswordDto: UpdatePasswordDto) {
-    const { newPassword, oldPassword } = updatePasswordDto;
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const { newPassword, oldPassword, login, role } = updateUserDto;
 
     const user = await this.prisma.user.findUnique({ where: { id } });
 
@@ -70,18 +70,36 @@ export class UserService {
       throw new NotFoundException(`User with id ${id} not found`);
     }
 
-    const isMatch = await PasswordService.compare(oldPassword, user.password);
-    if (!isMatch) {
-      throw new ForbiddenException(`Wrong password`);
+    if (oldPassword && newPassword) {
+      const isMatch = await PasswordService.compare(oldPassword, user.password);
+
+      if (!isMatch) {
+        throw new ForbiddenException(`Wrong password`);
+      }
     }
 
-    const updatedUser = await this.prisma.user.update({
-      where: { id },
-      data: { password: await PasswordService.hash(newPassword) },
-      select,
-    });
+    try {
+      const updatedUser = await this.prisma.user.update({
+        where: { id },
+        data: {
+          password: newPassword
+            ? await PasswordService.hash(newPassword)
+            : undefined,
+          login,
+          role,
+        },
+        select,
+      });
 
-    return convertTimestamp(updatedUser);
+      return convertTimestamp(updatedUser);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new ConflictException('Login is already taken');
+        }
+      }
+      throw error;
+    }
   }
 
   async delete(id: string) {

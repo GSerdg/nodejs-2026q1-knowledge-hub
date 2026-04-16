@@ -23,7 +23,7 @@ async function main() {
     data: { login: 'admin', password: passwordHash, role: Role.admin },
   });
   const editor = await prisma.user.create({
-    data: { login: 'editor', password: passwordHash, role: Role.admin },
+    data: { login: 'editor', password: passwordHash, role: Role.editor },
   });
 
   const catDev = await prisma.category.create({
