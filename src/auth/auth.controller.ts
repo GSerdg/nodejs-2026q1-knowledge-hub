@@ -4,43 +4,57 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SignupDto } from './dto/signup.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { Public } from 'src/common/decorators/public.decorator';
+import { TokensResponseDto } from './entities/auth.entity';
+import { UserEntity } from 'src/user/entities/user.entity';
 
-@ApiTags('auth/signup')
-@Controller('auth/signup')
+@ApiTags('auth')
+@Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
-  @Post()
+  @Post('signup')
   @ApiOperation({ summary: 'Signup user' })
-  @ApiResponse({ status: 201, description: 'Signup user ', type: SignupDto })
-  @ApiResponse({ status: 400, description: 'Unknown login or password' })
+  @ApiResponse({
+    status: 201,
+    description: 'Signup user ',
+    type: UserEntity,
+  })
+  @ApiResponse({ status: 400, description: 'BadRequestException' })
   async signup(@Body() userData: SignupDto) {
     return await this.authService.create(userData);
   }
 
   @Public()
-  @Post()
+  @Post('login')
   @ApiOperation({ summary: 'Login user' })
   @ApiResponse({
     status: 200,
     description: 'User is logged in',
-    type: SignupDto,
+    type: TokensResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Unknown login or password' })
+  @ApiResponse({ status: 400, description: 'BadRequestException' })
+  @ApiResponse({
+    status: 403,
+    description: 'No user with such login, password',
+  })
   async login(@Body() userData: SignupDto) {
     return await this.authService.login(userData);
   }
 
   @Public()
-  @Post()
+  @Post('refresh')
   @ApiOperation({ summary: 'Refresh token' })
   @ApiResponse({
     status: 200,
     description: 'New token created',
-    type: RefreshDto,
+    type: TokensResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Unknown login or password' })
+  @ApiResponse({ status: 401, description: 'No refreshToken in body' })
+  @ApiResponse({
+    status: 403,
+    description: 'Refresh token is invalid or expired',
+  })
   async refresh(@Body() data: RefreshDto) {
     return await this.authService.refresh(data);
   }

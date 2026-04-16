@@ -11,15 +11,22 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { RequestWithUser } from 'src/auth/entities/auth.entity';
 import { ArticleService } from './article.service';
+import { ArticleQueryDto } from './dto/article-query.dto';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
-import { ArticleQueryDto } from './dto/article-query.dto';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ArticleEntity } from './entities/article.entity';
-import { RequestWithUser } from 'src/auth/entities/auth.entity';
 
 @ApiTags('article')
+@ApiBearerAuth('access-token')
 @Controller('article')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}

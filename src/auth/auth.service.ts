@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { SignupDto } from './dto/signup.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -102,6 +103,10 @@ export class AuthService {
   }
 
   async refresh(dto: RefreshDto) {
+    if (!dto?.refreshToken) {
+      throw new UnauthorizedException('Refresh token is required');
+    }
+
     const { login } = await this.verifyRefreshToken(dto.refreshToken);
 
     const user = await this.prisma.user.findUnique({

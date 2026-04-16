@@ -9,13 +9,20 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { GetCommentsQueryDto } from './dto/get-comments.dto';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CommentEntity } from './entities/comment.entity';
 
 @ApiTags('comment')
+@ApiBearerAuth('access-token')
 @Controller('comment')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}

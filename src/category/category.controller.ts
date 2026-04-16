@@ -9,13 +9,20 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CategoryEntity } from './entities/category.entity';
 
 @ApiTags('category')
+@ApiBearerAuth('access-token')
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
