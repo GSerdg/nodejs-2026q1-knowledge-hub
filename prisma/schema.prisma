@@ -1,3 +1,15 @@
+enum Role {
+  admin
+  editor
+  viewer
+}
+
+enum Status {
+  draft
+  published
+  archived
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -11,7 +23,7 @@ model User {
   id        String   @id @default(uuid())
   login     String   @unique
   password  String
-  role      Role     @default(VIEWER)
+  role      Role     @default(viewer)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -23,7 +35,7 @@ model Article {
   id        String   @id @default(uuid())
   title     String
   content   String
-  status    Status   @default(DRAFT)
+  status    Status   @default(draft)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -62,16 +74,4 @@ model Tag {
   name String @unique
 
   articles Article[]
-}
-
-enum Role {
-  ADMIN
-  EDITOR
-  VIEWER
-}
-
-enum Status {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
 }

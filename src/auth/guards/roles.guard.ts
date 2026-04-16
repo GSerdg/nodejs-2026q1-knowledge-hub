@@ -27,16 +27,16 @@ export class RolesGuard implements CanActivate {
 
     if (!user) return false;
 
-    if (user.role === Role.ADMIN) return true;
+    if (user.role === Role.admin) return true;
 
-    if (user.role === Role.VIEWER) {
+    if (user.role === Role.viewer) {
       if (request.method !== 'GET') {
         throw new ForbiddenException('Viewer role has read-only access');
       }
       return true;
     }
 
-    if (user.role === Role.EDITOR) {
+    if (user.role === Role.editor) {
       if (request.url.startsWith('/categories') && request.method !== 'GET') {
         throw new ForbiddenException('Editors cannot manage categories');
       }

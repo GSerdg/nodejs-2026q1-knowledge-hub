@@ -6,7 +6,7 @@ import { Status } from '@prisma/client';
 export class ArticleQueryDto {
   @ApiPropertyOptional({
     enum: Status,
-    default: Status.DRAFT,
+    default: Status.draft,
     description: 'The status of the article',
   })
   @IsOptional()

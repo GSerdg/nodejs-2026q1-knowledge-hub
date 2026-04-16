@@ -16,7 +16,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
     const url = request.url;
-
     // Список исключений (публичные пути)
     const publicPaths = [
       '/doc',

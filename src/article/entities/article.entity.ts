@@ -24,7 +24,7 @@ export class ArticleEntity implements Article {
   @ApiProperty({ example: 'Content' })
   content!: string;
 
-  @ApiProperty({ enum: Status, default: Status.DRAFT })
+  @ApiProperty({ enum: Status, default: Status.draft })
   status!: Status;
 
   @ApiProperty({ example: randomUUID(), nullable: true })

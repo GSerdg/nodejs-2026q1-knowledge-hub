@@ -135,7 +135,7 @@ export class ArticleService {
       throw new NotFoundException(`Article with id ${id} not found`);
     }
 
-    if (userRole !== Role.ADMIN && article.authorId !== userId) {
+    if (userRole !== Role.admin && article.authorId !== userId) {
       throw new ForbiddenException('You can only delete your own articles');
     }
 

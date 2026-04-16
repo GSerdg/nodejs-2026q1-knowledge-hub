@@ -14,7 +14,7 @@ const prisma = new PrismaClient();
 const createArticleDto = {
   title: 'TEST_ARTICLE',
   content: 'Test article content',
-  status: 'DRAFT',
+  status: 'draft',
   authorId: null,
   categoryId: null,
   tags: [],
@@ -113,7 +113,7 @@ describe('Article (e2e)', () => {
       const draftArticle = await unauthorizedRequest
         .post(articlesRoutes.create)
         .set(commonHeaders)
-        .send({ ...createArticleDto, status: 'DRAFT' });
+        .send({ ...createArticleDto, status: 'draft' });
 
       expect(draftArticle.status).toBe(StatusCodes.CREATED);
       const { id: draftId } = draftArticle.body;
@@ -124,14 +124,14 @@ describe('Article (e2e)', () => {
         .send({
           ...createArticleDto,
           title: 'PUBLISHED_ARTICLE',
-          status: 'PUBLISHED',
+          status: 'published',
         });
 
       expect(publishedArticle.status).toBe(StatusCodes.CREATED);
       const { id: publishedId } = publishedArticle.body;
 
       const response = await unauthorizedRequest
-        .get(`${articlesRoutes.getAll}?status=DRAFT`)
+        .get(`${articlesRoutes.getAll}?status=draft`)
         .set(commonHeaders);
 
       expect(response.status).toBe(StatusCodes.OK);
@@ -353,7 +353,7 @@ describe('Article (e2e)', () => {
         .send({
           title: updatedTitle,
           content: updatedContent,
-          status: 'PUBLISHED',
+          status: 'published',
           categoryId: updateCategoryId,
           tags: ['updated'],
         });
@@ -375,7 +375,7 @@ describe('Article (e2e)', () => {
 
       expect(title).toBe(updatedTitle);
       expect(content).toBe(updatedContent);
-      expect(status).toBe('PUBLISHED');
+      expect(status).toBe('published');
       expect(categoryId).toBe(updateCategoryId);
       expect(tags).toContain('updated');
       expect(validate(updatedId)).toBe(true);

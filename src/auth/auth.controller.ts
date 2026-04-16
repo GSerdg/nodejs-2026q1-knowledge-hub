@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SignupDto } from './dto/signup.dto';
@@ -27,6 +27,7 @@ export class AuthController {
 
   @Public()
   @Post('login')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Login user' })
   @ApiResponse({
     status: 200,
@@ -44,6 +45,7 @@ export class AuthController {
 
   @Public()
   @Post('refresh')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Refresh token' })
   @ApiResponse({
     status: 200,
@@ -56,6 +58,7 @@ export class AuthController {
     description: 'Refresh token is invalid or expired',
   })
   async refresh(@Body() data: RefreshDto) {
+    console.log('CONTROLLER: Inside refresh with data:', data);
     return await this.authService.refresh(data);
   }
 }

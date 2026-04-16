@@ -21,7 +21,7 @@ export class UserEntity implements User {
   @ApiProperty({ example: 'password' })
   password!: string;
 
-  @ApiProperty({ enum: Role, default: Role.VIEWER })
+  @ApiProperty({ enum: Role, default: Role.viewer })
   role!: Role;
 
   @ApiProperty({ example: 1712045100000, description: 'Timestamp of creation' })

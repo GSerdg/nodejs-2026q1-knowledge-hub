@@ -20,10 +20,10 @@ async function main() {
   const passwordHash = await PasswordService.hash('password123');
 
   const admin = await prisma.user.create({
-    data: { login: 'admin', password: passwordHash, role: Role.ADMIN },
+    data: { login: 'admin', password: passwordHash, role: Role.admin },
   });
   const editor = await prisma.user.create({
-    data: { login: 'editor', password: passwordHash, role: Role.EDITOR },
+    data: { login: 'editor', password: passwordHash, role: Role.admin },
   });
 
   const catDev = await prisma.category.create({
@@ -48,7 +48,7 @@ async function main() {
     data: {
       title: 'NestJS Guide',
       content: 'Long content about Nest...',
-      status: Status.PUBLISHED,
+      status: Status.published,
       authorId: admin.id,
       categoryId: catDev.id,
       tags: { connect: [{ id: tags[0].id }, { id: tags[1].id }] },
@@ -59,7 +59,7 @@ async function main() {
     data: {
       title: 'Dockerize Apps',
       content: 'How to use docker...',
-      status: Status.PUBLISHED,
+      status: Status.published,
       authorId: editor.id,
       categoryId: catDev.id,
       tags: { connect: [{ id: tags[3].id }] },
@@ -70,7 +70,7 @@ async function main() {
     data: {
       title: 'Old UI Trends',
       content: 'Flash and skeuomorphism were popular in 2010...',
-      status: Status.ARCHIVED,
+      status: Status.archived,
       authorId: admin.id,
       categoryId: catDesign.id,
       tags: { connect: [{ id: tags[4].id }] },
@@ -81,7 +81,7 @@ async function main() {
     data: {
       title: 'Future of NestJS',
       content: 'This article is still a draft and not visible to viewers...',
-      status: Status.DRAFT,
+      status: Status.draft,
       authorId: editor.id,
       categoryId: catDev.id,
       tags: { connect: [{ id: tags[0].id }, { id: tags[1].id }] },
@@ -92,7 +92,7 @@ async function main() {
     data: {
       title: 'New Knowledge Hub Release',
       content: 'Version 2.0 with PostgreSQL is finally here!',
-      status: Status.PUBLISHED,
+      status: Status.published,
       authorId: admin.id,
       categoryId: catNews.id,
       tags: { connect: [{ id: tags[2].id }, { id: tags[3].id }] },
