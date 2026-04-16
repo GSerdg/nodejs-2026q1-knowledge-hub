@@ -1,5 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ArticleQueryDto } from './dto/article-query.dto';
 import { CreateArticleDto } from './dto/create-article.dto';
@@ -124,29 +128,29 @@ export class ArticleService {
     }
   }
 
-  async delete(id: string) {
-    try {
-      const article = await this.prisma.article.delete({
-        where: { id },
-        include: {
-          tags: true,
-        },
-      });
+  async delete(id: string, userId: string, userRole: Role) {
+    const article = await this.prisma.article.findUnique({ where: { id } });
 
-      const converted = convertTimestamp(article);
-
-      return {
-        ...converted,
-        tags: converted.tags.map((t: any) => t.name),
-      };
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === PRISMA_ERROR_CODES.NOT_FOUND) {
-          throw new NotFoundException(`Article with id ${id} not found`);
-        }
-      }
-
-      throw error;
+    if (!article) {
+      throw new NotFoundException(`Article with id ${id} not found`);
     }
+
+    if (userRole !== Role.ADMIN && article.authorId !== userId) {
+      throw new ForbiddenException('You can only delete your own articles');
+    }
+
+    const deletedArticle = await this.prisma.article.delete({
+      where: { id },
+      include: {
+        tags: true,
+      },
+    });
+
+    const converted = convertTimestamp(deletedArticle);
+
+    return {
+      ...converted,
+      tags: converted.tags.map((t: any) => t.name),
+    };
   }
 }

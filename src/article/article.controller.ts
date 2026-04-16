@@ -9,6 +9,7 @@ import {
   Post,
   Put,
   Query,
+  Req,
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
@@ -16,6 +17,7 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { ArticleQueryDto } from './dto/article-query.dto';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ArticleEntity } from './entities/article.entity';
+import { RequestWithUser } from 'src/auth/entities/auth.entity';
 
 @ApiTags('article')
 @Controller('article')
@@ -83,7 +85,12 @@ export class ArticleController {
   @ApiResponse({ status: 204, description: 'Deleted successfully' })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Article not found' })
-  async delete(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    return await this.articleService.delete(id);
+  async delete(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Req() req: RequestWithUser,
+  ) {
+    const { userId, role } = req.user;
+
+    return await this.articleService.delete(id, userId, role);
   }
 }
