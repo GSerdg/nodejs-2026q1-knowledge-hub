@@ -2,6 +2,7 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SignupDto } from './dto/signup.dto';
+import { RefreshDto } from './dto/refresh.dto';
 
 @ApiTags('auth/signup')
 @Controller('auth/signup')
@@ -26,5 +27,17 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Unknown login or password' })
   async login(@Body() userData: SignupDto) {
     return await this.authService.login(userData);
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Refresh token' })
+  @ApiResponse({
+    status: 200,
+    description: 'New token created',
+    type: RefreshDto,
+  })
+  @ApiResponse({ status: 400, description: 'Unknown login or password' })
+  async refresh(@Body() data: RefreshDto) {
+    return await this.authService.refresh(data);
   }
 }

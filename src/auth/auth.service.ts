@@ -9,6 +9,8 @@ import { Prisma, Role, User } from '@prisma/client';
 import { convertTimestamp } from 'src/utils/convertTimestamp';
 import { PasswordService } from 'src/common/password.service';
 import { JwtService } from '@nestjs/jwt';
+import { RefreshDto } from './dto/refresh.dto';
+import { MyJwtPayload } from './entities/auth.entity';
 
 const select = {
   id: true,
@@ -46,6 +48,21 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
+  async verifyRefreshToken(refreshToken: string) {
+    try {
+      const userData = await this.jwtService.verifyAsync<MyJwtPayload>(
+        refreshToken,
+        {
+          secret: process.env.JWT_REFRESH_SECRET,
+        },
+      );
+
+      return userData;
+    } catch (error) {
+      throw new ForbiddenException('Refresh token is invalid or expired');
+    }
+  }
+
   async create(dto: SignupDto) {
     try {
       const hashedPassword = await PasswordService.hash(dto.password);
@@ -79,6 +96,20 @@ export class AuthService {
       !(await PasswordService.compare(dto.password, user.password))
     ) {
       throw new ForbiddenException('Unknown login or password');
+    }
+
+    return await this.generateTokens(user);
+  }
+
+  async refresh(dto: RefreshDto) {
+    const { login } = await this.verifyRefreshToken(dto.refreshToken);
+
+    const user = await this.prisma.user.findUnique({
+      where: { login },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('Authorization failed');
     }
 
     return await this.generateTokens(user);
