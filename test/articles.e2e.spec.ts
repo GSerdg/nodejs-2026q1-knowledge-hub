@@ -34,9 +34,21 @@ describe('Article (e2e)', () => {
   let mockUserId: string | undefined;
 
   beforeAll(async () => {
+    await prisma.user.deleteMany({});
+
     if (shouldAuthorizationBeTested) {
       const result = await getTokenAndUserId(unauthorizedRequest);
-      commonHeaders['Authorization'] = result.token;
+
+      await prisma.user.update({
+        where: { id: result.mockUserId },
+        data: { role: 'admin' },
+      });
+
+      const loginRes = await request.post('/auth/login').send({
+        login: result.login,
+        password: 'Tu6!@#%&',
+      });
+      commonHeaders['Authorization'] = `Bearer ${loginRes.body.accessToken}`;
       mockUserId = result.mockUserId;
     }
   });
@@ -49,12 +61,6 @@ describe('Article (e2e)', () => {
     if (commonHeaders['Authorization']) {
       delete commonHeaders['Authorization'];
     }
-  });
-
-  beforeEach(async () => {
-    await prisma.article.deleteMany({});
-    await prisma.category.deleteMany({});
-    await prisma.tag.deleteMany({});
   });
 
   describe('GET', () => {
