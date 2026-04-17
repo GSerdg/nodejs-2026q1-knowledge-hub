@@ -8,6 +8,7 @@ import {
   ParseUUIDPipe,
   Post,
   Query,
+  Req,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -20,6 +21,7 @@ import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { GetCommentsQueryDto } from './dto/get-comments.dto';
 import { CommentEntity } from './entities/comment.entity';
+import { RequestWithUser } from 'src/auth/entities/auth.entity';
 
 @ApiTags('comment')
 @ApiBearerAuth('access-token')
@@ -81,7 +83,12 @@ export class CommentController {
   @ApiResponse({ status: 204, description: 'Comment deleted' })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Comment not found' })
-  async delete(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    return await this.commentService.delete(id);
+  async delete(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Req() req: RequestWithUser,
+  ) {
+    const { userId, role } = req.user;
+
+    return await this.commentService.delete(id, userId, role);
   }
 }

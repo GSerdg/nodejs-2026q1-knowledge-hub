@@ -47,7 +47,7 @@ describe('RBAC - Articles (e2e)', () => {
 
     const loginRes = await request.post('/auth/login').send({
       login: adminResult.login,
-      password: 'Tu6!@#%&', // пароль из твоего getTokenAndUserId
+      password: 'Tu6!@#%&',
     });
 
     adminHeaders = {

@@ -8,6 +8,7 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Req,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -20,6 +21,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/user.entity';
 import { UserService } from './user.service';
+import { RequestWithUser } from 'src/auth/entities/auth.entity';
 
 @ApiTags('user')
 @ApiBearerAuth('access-token')
@@ -74,8 +76,11 @@ export class UserController {
   async Update(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateUserDto: UpdateUserDto,
+    @Req() req: RequestWithUser,
   ) {
-    return await this.userService.update(id, updateUserDto);
+    const { userId, role } = req.user;
+
+    return await this.userService.update(id, updateUserDto, userId, role);
   }
 
   @Delete(':id')
@@ -85,7 +90,12 @@ export class UserController {
   @ApiResponse({ status: 204, description: 'User deleted' })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async delete(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    return await this.userService.delete(id);
+  async delete(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Req() req: RequestWithUser,
+  ) {
+    const { userId, role } = req.user;
+
+    return await this.userService.delete(id, userId, role);
   }
 }

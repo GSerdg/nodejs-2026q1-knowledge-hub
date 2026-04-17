@@ -1,9 +1,10 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -61,17 +62,17 @@ export class CommentService {
     }
   }
 
-  async delete(id: string) {
-    try {
-      return await this.prisma.comment.delete({ where: { id } });
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === PRISMA_ERROR_CODES.NOT_FOUND) {
-          throw new NotFoundException(`Comment with id ${id} not found`);
-        }
-      }
+  async delete(id: string, userId: string, userRole: Role) {
+    const comment = await this.prisma.comment.findUnique({ where: { id } });
 
-      throw error;
+    if (!comment) {
+      throw new NotFoundException(`Comment with id ${id} not found`);
     }
+
+    if (userRole !== Role.admin && comment.authorId !== userId) {
+      throw new ForbiddenException('You can only delete your own articles');
+    }
+
+    return await this.prisma.comment.delete({ where: { id } });
   }
 }

@@ -37,8 +37,12 @@ export class RolesGuard implements CanActivate {
     }
 
     if (user.role === Role.editor) {
-      if (request.url.startsWith('/categories') && request.method !== 'GET') {
+      if (request.url.startsWith('/category') && request.method !== 'GET') {
         throw new ForbiddenException('Editors cannot manage categories');
+      }
+
+      if (request.url.startsWith('/user') && request.method === 'POST') {
+        throw new ForbiddenException('Editors cannot create new user');
       }
 
       return true;

@@ -88,7 +88,6 @@ export class CategoryController {
   @ApiResponse({ status: 204, description: 'Category deleted' })
   @ApiResponse({ status: 400, description: 'Invalid UUID' })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  @HttpCode(204)
   async delete(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     return await this.categoryService.delete(id);
   }

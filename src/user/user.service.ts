@@ -7,7 +7,7 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
 import { convertTimestamp } from 'src/utils/convertTimestamp';
 import { PasswordService } from 'src/common/password.service';
@@ -61,13 +61,26 @@ export class UserService {
     }
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    userId: string,
+    userRole: Role,
+  ) {
     const { newPassword, oldPassword, login, role } = updateUserDto;
 
     const user = await this.prisma.user.findUnique({ where: { id } });
 
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
+    }
+
+    if (userRole !== Role.admin && id !== userId) {
+      throw new ForbiddenException('You can not change any users');
+    }
+
+    if (userRole !== Role.admin && updateUserDto.role) {
+      throw new ForbiddenException('You can not change your own role');
     }
 
     if (oldPassword && newPassword) {
@@ -102,7 +115,11 @@ export class UserService {
     }
   }
 
-  async delete(id: string) {
+  async delete(id: string, userId: string, userRole: Role) {
+    if (userRole !== Role.admin && id !== userId) {
+      throw new ForbiddenException('You can not delete any users');
+    }
+
     try {
       const deletedUser = await this.prisma.user.delete({
         where: { id },

@@ -35,7 +35,21 @@ describe('RBAC - Users (e2e)', () => {
     if (!shouldAuthorizationBeTested) return;
 
     const adminResult = await getTokenAndUserId(request);
-    adminHeaders = { ...headers, Authorization: adminResult.token };
+
+    await prisma.user.update({
+      where: { id: adminResult.mockUserId },
+      data: { role: 'admin' },
+    });
+
+    const loginRes = await request.post('/auth/login').send({
+      login: adminResult.login,
+      password: 'Tu6!@#%&',
+    });
+
+    adminHeaders = {
+      ...headers,
+      Authorization: `Bearer ${loginRes.body.accessToken}`,
+    };
     adminUserId = adminResult.mockUserId;
 
     const editorResult = await getUserTokenByRole(
