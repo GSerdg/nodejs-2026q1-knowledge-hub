@@ -9,6 +9,9 @@ import {
 import { HttpStatus } from '@nestjs/common';
 import { decode, JwtPayload } from 'jsonwebtoken';
 import { validate } from 'uuid';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 type UserTokens = {
   userId: string;
@@ -25,6 +28,7 @@ type RefreshResponse = {
 interface TokenPayload extends JwtPayload {
   userId: string;
   login: string;
+  role: string;
 }
 
 describe('Refresh (e2e)', () => {
@@ -36,13 +40,16 @@ describe('Refresh (e2e)', () => {
     if (!payload) {
       throw new Error('Token is not valid!');
     }
-    const { userId, login, exp } = payload as TokenPayload;
+    const { userId, login, role, exp } = payload as TokenPayload;
     expect(payload).toBeInstanceOf(Object);
     expect(login).toBeDefined();
     expect(typeof login).toBe('string');
     expect(userId).toBeDefined();
     expect(typeof userId).toBe('string');
     expect(validate(userId)).toBeTruthy();
+    expect(role).toBeDefined();
+    expect(typeof role).toBe('string');
+    expect(['admin', 'editor', 'viewer']).toContain(role);
     expect(exp).toBeDefined();
     expect(typeof exp).toBe('number');
     expect(exp).toBeGreaterThan(0);
@@ -50,6 +57,8 @@ describe('Refresh (e2e)', () => {
   };
 
   beforeAll(async () => {
+    await prisma.user.deleteMany({});
+
     if (shouldAuthorizationBeTested) {
       const { accessToken, refreshToken, mockUserId, login, token } =
         await getTokenAndUserId(request);
@@ -83,7 +92,7 @@ describe('Refresh (e2e)', () => {
 
       const accessTokenPayload: TokenPayload = await verifyToken(accessToken);
       const refreshTokenPayload: TokenPayload = await verifyToken(refreshToken);
-      expect(refreshTokenPayload.exp).toBeGreaterThan(accessTokenPayload.exp);
+      expect(refreshTokenPayload.exp).toBeGreaterThan(accessTokenPayload.exp!);
     });
 
     it('should fail with 403 (invalid refresh token)', async () => {
@@ -104,6 +113,7 @@ describe('Refresh (e2e)', () => {
       const payload: TokenPayload = {
         userId: userTokens.userId,
         login: userTokens.login,
+        role: 'viewer',
       };
       const refreshToken = generateRefreshToken(payload, { expiresIn: '0s' });
       const response = await request
