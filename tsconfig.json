@@ -23,7 +23,8 @@
     "include": [
     "src/**/*.ts",
     "test/**/*.ts",
-    "prisma/seed.ts"
+    "prisma/seed.ts",
+    "vitest.config.ts"
   ],
   "exclude": ["node_modules"]
 }
