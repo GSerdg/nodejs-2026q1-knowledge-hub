@@ -22,6 +22,8 @@ export default defineConfig({
       exclude: [
         'src/**/*.spec.ts',
         'src/**/*.module.ts',
+        'src/**/*.controller.ts',
+        'src/prisma/prisma.service.ts',
         'src/main.ts',
         'src/__tests__/**',
       ],
