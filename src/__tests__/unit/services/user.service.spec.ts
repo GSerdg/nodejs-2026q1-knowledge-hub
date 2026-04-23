@@ -54,7 +54,7 @@ describe('UserService', () => {
   });
 
   describe('find all users', () => {
-    it('should return user', async () => {
+    it('should return user without password', async () => {
       prismaMock.user.findMany.mockResolvedValue([mockUser, mockUser]);
 
       const result = await userService.findAll();
@@ -65,7 +65,7 @@ describe('UserService', () => {
   });
 
   describe('find user by id', () => {
-    it('should return array width users data width selection', async () => {
+    it('should return array width users data (without password) width selection', async () => {
       prismaMock.user.findUnique.mockResolvedValue(mockUser);
 
       const result = await userService.findById(userId);
@@ -96,7 +96,7 @@ describe('UserService', () => {
       role: Role.viewer,
     };
 
-    it('should create user, hashed password and return user data', async () => {
+    it('should create user, hashed password and return user data without password', async () => {
       vi.spyOn(PasswordService, 'hash').mockResolvedValue(hashedPassword);
       prismaMock.user.create.mockResolvedValue(mockUser);
 
@@ -130,10 +130,18 @@ describe('UserService', () => {
         `User with this login: ${createUserDto.login} already exists`,
       );
     });
+
+    it('should throw any error', async () => {
+      prismaMock.user.create.mockRejectedValue(new Error('error message'));
+
+      await expect(userService.create(createUserDto)).rejects.toThrow(
+        'error message',
+      );
+    });
   });
 
   describe('update user', () => {
-    it('should change password, login and role, compare passwords and hash new password', async () => {
+    it('should change password, login and role, compare passwords and hash new password and return user data without password', async () => {
       vi.spyOn(PasswordService, 'compare').mockResolvedValue(true);
       vi.spyOn(PasswordService, 'hash').mockResolvedValue(hashedPassword);
       prismaMock.user.update.mockResolvedValue(mockUser);
@@ -231,6 +239,14 @@ describe('UserService', () => {
         userService.update(userId, { login: 'testLogin' }, testId, Role.admin),
       ).rejects.toThrow(ConflictException);
     });
+
+    it('should throw any error', async () => {
+      prismaMock.user.update.mockRejectedValue(new Error('error message'));
+
+      await expect(
+        userService.update(userId, { login: 'testLogin' }, testId, Role.admin),
+      ).rejects.toThrow('error message');
+    });
   });
 
   describe('delete user', () => {
@@ -262,6 +278,14 @@ describe('UserService', () => {
       await expect(
         userService.delete(mockUser.id, testId, Role.admin),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw any error', async () => {
+      prismaMock.user.delete.mockRejectedValue(new Error('error message'));
+
+      await expect(
+        userService.delete(mockUser.id, testId, Role.admin),
+      ).rejects.toThrow('error message');
     });
   });
 });

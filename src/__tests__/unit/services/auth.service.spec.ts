@@ -100,6 +100,14 @@ describe('AuthService', () => {
         BadRequestException,
       );
     });
+
+    it('should throw any error', async () => {
+      prismaMock.user.create.mockRejectedValue(new Error('error message'));
+
+      await expect(authService.create(signupDto)).rejects.toThrow(
+        'error message',
+      );
+    });
   });
 
   describe('login', () => {
