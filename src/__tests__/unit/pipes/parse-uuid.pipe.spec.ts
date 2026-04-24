@@ -22,7 +22,7 @@ describe('ParseUUIDPipe for some id', () => {
   });
 
   it('should throw BadRequestException for a valid UUID but wrong version (e.g., v1)', async () => {
-    // UUID v1 (временной)
+    // UUID v1
     const uuidV1 = 'e15e81d0-ba0f-11ef-93c6-33924f7961b1';
 
     await expect(pipe.transform(uuidV1, { type: 'param' })).rejects.toThrow(

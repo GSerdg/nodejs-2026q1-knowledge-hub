@@ -1,9 +1,4 @@
-import {
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -11,6 +6,11 @@ import { Prisma, Role } from '@prisma/client';
 import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
 import { convertTimestamp } from 'src/utils/convertTimestamp';
 import { PasswordService } from 'src/common/password.service';
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+} from 'src/common/errors/custom-error';
 
 const select = {
   id: true,
@@ -33,7 +33,7 @@ export class UserService {
   async findById(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id }, select });
 
-    if (!user) throw new NotFoundException(`User with id ${id} not found`);
+    if (!user) throw new NotFoundError(`User with id ${id} not found`);
 
     return convertTimestamp(user);
   }
@@ -51,7 +51,7 @@ export class UserService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
-          throw new ConflictException(
+          throw new ConflictError(
             `User with this login: ${dto.login} already exists`,
           );
         }
@@ -72,22 +72,22 @@ export class UserService {
     const user = await this.prisma.user.findUnique({ where: { id } });
 
     if (!user) {
-      throw new NotFoundException(`User with id ${id} not found`);
+      throw new NotFoundError(`User with id ${id} not found`);
     }
 
     if (userRole !== Role.admin && id !== userId) {
-      throw new ForbiddenException('You can not change any users');
+      throw new ForbiddenError('You can not change any users');
     }
 
     if (userRole !== Role.admin && updateUserDto.role) {
-      throw new ForbiddenException('You can not change your own role');
+      throw new ForbiddenError('You can not change your own role');
     }
 
     if (oldPassword && newPassword) {
       const isMatch = await PasswordService.compare(oldPassword, user.password);
 
       if (!isMatch) {
-        throw new ForbiddenException(`Wrong password`);
+        throw new ForbiddenError(`Wrong password`);
       }
     }
 
@@ -108,7 +108,7 @@ export class UserService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
-          throw new ConflictException('Login is already taken');
+          throw new ConflictError('Login is already taken');
         }
       }
       throw error;
@@ -117,7 +117,7 @@ export class UserService {
 
   async delete(id: string, userId: string, userRole: Role) {
     if (userRole !== Role.admin && id !== userId) {
-      throw new ForbiddenException('You can not delete any users');
+      throw new ForbiddenError('You can not delete any users');
     }
 
     try {
@@ -130,7 +130,7 @@ export class UserService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === PRISMA_ERROR_CODES.NOT_FOUND) {
-          throw new NotFoundException(`User with id ${id} not found`);
+          throw new NotFoundError(`User with id ${id} not found`);
         }
       }
 

@@ -1,8 +1,4 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ArticleQueryDto } from './dto/article-query.dto';
@@ -10,6 +6,7 @@ import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
 import { convertTimestamp } from 'src/utils/convertTimestamp';
+import { ForbiddenError, NotFoundError } from 'src/common/errors/custom-error';
 
 @Injectable()
 export class ArticleService {
@@ -50,7 +47,7 @@ export class ArticleService {
     });
 
     if (!article) {
-      throw new NotFoundException(`Article with id ${id} not found`);
+      throw new NotFoundError(`Article with id ${id} not found`);
     }
 
     const converted = convertTimestamp(article);
@@ -120,7 +117,7 @@ export class ArticleService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === PRISMA_ERROR_CODES.NOT_FOUND) {
-          throw new NotFoundException(`Article with id ${id} not found`);
+          throw new NotFoundError(`Article with id ${id} not found`);
         }
       }
 
@@ -132,11 +129,11 @@ export class ArticleService {
     const article = await this.prisma.article.findUnique({ where: { id } });
 
     if (!article) {
-      throw new NotFoundException(`Article with id ${id} not found`);
+      throw new NotFoundError(`Article with id ${id} not found`);
     }
 
     if (userRole !== Role.admin && article.authorId !== userId) {
-      throw new ForbiddenException('You can only delete your own articles');
+      throw new ForbiddenError('You can only delete your own articles');
     }
 
     const deletedArticle = await this.prisma.article.delete({

@@ -1,12 +1,12 @@
-import {
-  UnprocessableEntityException,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
 import { TestingModule, Test } from '@nestjs/testing';
 import { Prisma, Role } from '@prisma/client';
 import { prismaMock, resetPrismaMock } from 'src/__tests__/prisma-mock';
 import { CommentService } from 'src/comment/comment.service';
+import {
+  ForbiddenError,
+  NotFoundError,
+  UnprocessableEntityError,
+} from 'src/common/errors/custom-error';
 import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -71,11 +71,11 @@ describe('CommentService', () => {
       expect(result.id).toBe(mockComment.id);
     });
 
-    it('should throw NotFoundException if comment is not found', async () => {
+    it('should throw NotFoundError if comment is not found', async () => {
       prismaMock.comment.findUnique.mockResolvedValue(null);
 
       await expect(commentService.findById('unknown-id')).rejects.toThrow(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });
@@ -91,7 +91,7 @@ describe('CommentService', () => {
       });
     });
 
-    it('should throw UnprocessableEntityException if author does not exist', async () => {
+    it('should throw UnprocessableEntityError if author does not exist', async () => {
       const error = new Prisma.PrismaClientKnownRequestError(
         'Foreign key fail',
         {
@@ -104,13 +104,13 @@ describe('CommentService', () => {
       prismaMock.comment.create.mockRejectedValue(error);
 
       await expect(commentService.create(mockCommentDto)).rejects.toThrow(
-        new UnprocessableEntityException(
+        new UnprocessableEntityError(
           `User with id ${mockCommentDto.authorId} does not exist`,
         ),
       );
     });
 
-    it('should throw UnprocessableEntityException if article does not exist', async () => {
+    it('should throw UnprocessableEntityError if article does not exist', async () => {
       const error = new Prisma.PrismaClientKnownRequestError(
         'Foreign key fail',
         {
@@ -123,13 +123,13 @@ describe('CommentService', () => {
       prismaMock.comment.create.mockRejectedValue(error);
 
       await expect(commentService.create(mockCommentDto)).rejects.toThrow(
-        new UnprocessableEntityException(
+        new UnprocessableEntityError(
           `Article with id ${mockCommentDto.articleId} does not exist`,
         ),
       );
     });
 
-    it('should throw UnprocessableEntityException if related record not found', async () => {
+    it('should throw UnprocessableEntityError if related record not found', async () => {
       const error = new Prisma.PrismaClientKnownRequestError(
         'Foreign key fail',
         {
@@ -142,7 +142,7 @@ describe('CommentService', () => {
       prismaMock.comment.create.mockRejectedValue(error);
 
       await expect(commentService.create(mockCommentDto)).rejects.toThrow(
-        new UnprocessableEntityException(`Related record not found`),
+        new UnprocessableEntityError(`Related record not found`),
       );
     });
 
@@ -174,20 +174,20 @@ describe('CommentService', () => {
       expect(prismaMock.comment.delete).toHaveBeenCalled();
     });
 
-    it('should throw ForbiddenException if user is not the author or admin', async () => {
+    it('should throw ForbiddenError if user is not the author or admin', async () => {
       prismaMock.comment.findUnique.mockResolvedValue(mockComment);
 
       await expect(
         commentService.delete(commentId, 'other-user', Role.viewer),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
     });
 
-    it('should throw NotFoundException if comment does not exist', async () => {
+    it('should throw NotFoundError if comment does not exist', async () => {
       prismaMock.comment.findUnique.mockResolvedValue(null);
 
       await expect(
         commentService.delete('invalid', 'user-1', Role.admin),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
     });
   });
 });

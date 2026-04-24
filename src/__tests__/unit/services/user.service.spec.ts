@@ -5,15 +5,15 @@ import { vi } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { Prisma, Role, User } from '@prisma/client';
 import { PasswordService } from 'src/common/password.service';
-import {
-  ConflictException,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { UpdateUserDto } from 'src/user/dto/update-user.dto';
 import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+} from 'src/common/errors/custom-error';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -80,9 +80,7 @@ describe('UserService', () => {
     it('should respond 404 if user not found', async () => {
       prismaMock.user.findUnique.mockResolvedValue(null);
 
-      await expect(userService.findById(userId)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(userService.findById(userId)).rejects.toThrow(NotFoundError);
       await expect(userService.findById(userId)).rejects.toThrow(
         `User with id ${userId} not found`,
       );
@@ -124,7 +122,7 @@ describe('UserService', () => {
       prismaMock.user.create.mockRejectedValue(prismaError);
 
       await expect(userService.create(createUserDto)).rejects.toThrow(
-        ConflictException,
+        ConflictError,
       );
       await expect(userService.create(createUserDto)).rejects.toThrow(
         `User with this login: ${createUserDto.login} already exists`,
@@ -186,7 +184,7 @@ describe('UserService', () => {
 
       await expect(
         userService.update(userId, updateUserDto, userId, Role.admin),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
     });
 
     it('should respond 403 if user can not update users', async () => {
@@ -218,7 +216,7 @@ describe('UserService', () => {
 
       await expect(
         userService.update(userId, updateUserDto, testId, Role.admin),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
       await expect(
         userService.update(userId, updateUserDto, testId, Role.admin),
       ).rejects.toThrow('Wrong password');
@@ -237,7 +235,7 @@ describe('UserService', () => {
 
       await expect(
         userService.update(userId, { login: 'testLogin' }, testId, Role.admin),
-      ).rejects.toThrow(ConflictException);
+      ).rejects.toThrow(ConflictError);
     });
 
     it('should throw any error', async () => {
@@ -264,7 +262,7 @@ describe('UserService', () => {
 
       await expect(
         userService.delete(mockUser.id, testId, Role.viewer),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
     });
 
     it('should respond 404 if user not found', async () => {
@@ -277,7 +275,7 @@ describe('UserService', () => {
 
       await expect(
         userService.delete(mockUser.id, testId, Role.admin),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
     });
 
     it('should throw any error', async () => {

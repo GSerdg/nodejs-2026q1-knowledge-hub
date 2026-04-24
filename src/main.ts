@@ -1,10 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { WinstonModule } from 'nest-winston';
+import { getWinstonConfig } from './common/logger/logger.config';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const port = process.env.PORT || 4000;
+  const winstonLogger = WinstonModule.createLogger(getWinstonConfig());
+
+  const app = await NestFactory.create(AppModule, { logger: winstonLogger });
 
   const config = new DocumentBuilder()
     .setTitle('Knowledge Hub API')
@@ -39,6 +45,42 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(4000);
+  app.useGlobalFilters(new AllExceptionsFilter());
+
+  const handleFatalError = (message: string, err: any) => {
+    winstonLogger.error(message, err instanceof Error ? err.stack : err);
+
+    process.stderr.write(`${message} - Graceful shutdown initiated...\n`);
+
+    setTimeout(() => {
+      process.stderr.write('Forced exit by timeout.\n');
+      process.exit(1);
+    }, 2000);
+
+    app
+      .close()
+      .then(() => {
+        process.stdout.write('App closed successfully.\n');
+        process.exit(1);
+      })
+      .catch(() => {
+        process.exit(1);
+      });
+  };
+
+  process.on('uncaughtException', (err) =>
+    handleFatalError('Uncaught Exception', err),
+  );
+  process.on('unhandledRejection', (reason) =>
+    handleFatalError('Unhandled Rejection', reason),
+  );
+
+  await app.listen(port);
+
+  Logger.log(
+    `Application is running on: http://localhost:${port}`,
+    'Bootstrap',
+  );
 }
+
 bootstrap();

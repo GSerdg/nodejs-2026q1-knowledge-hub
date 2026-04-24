@@ -1,11 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RolesGuard } from '../../../auth/guards/roles.guard'; // проверь путь
 import { Reflector } from '@nestjs/core';
-import { ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { ExecutionContext } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { IS_PUBLIC_KEY } from 'src/common/decorators/public.decorator';
 import { ROLES_KEY } from 'src/common/decorators/roles.decorator';
+import { ForbiddenError } from 'src/common/errors/custom-error';
 
 describe('RolesGuard', () => {
   let guard: RolesGuard;
@@ -83,14 +84,14 @@ describe('RolesGuard', () => {
         expect(guard.canActivate(context)).toBe(true);
       });
 
-      it('should throw ForbiddenException if Viewer tries to perform non-GET requests', () => {
+      it('should throw ForbiddenError if Viewer tries to perform non-GET requests', () => {
         const context = createMockContext(
           { role: Role.viewer },
           'POST',
         ) as ExecutionContext;
         vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
 
-        expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
+        expect(() => guard.canActivate(context)).toThrow(ForbiddenError);
         expect(() => guard.canActivate(context)).toThrow(
           'Viewer role has read-only access',
         );
@@ -98,7 +99,7 @@ describe('RolesGuard', () => {
     });
 
     describe('Editor role restrictions', () => {
-      it('should throw ForbiddenException if Editor tries to manage categories', () => {
+      it('should throw ForbiddenError if Editor tries to manage categories', () => {
         const context = createMockContext(
           { role: Role.editor },
           'POST',
@@ -111,7 +112,7 @@ describe('RolesGuard', () => {
         );
       });
 
-      it('should throw ForbiddenException if Editor tries to create a user', () => {
+      it('should throw ForbiddenError if Editor tries to create a user', () => {
         const context = createMockContext(
           { role: Role.editor },
           'POST',
@@ -137,7 +138,7 @@ describe('RolesGuard', () => {
     });
 
     describe('RBAC decorator logic', () => {
-      it('should throw ForbiddenException if user role is not in the required roles list', () => {
+      it('should throw ForbiddenError if user role is not in the required roles list', () => {
         const context = createMockContext({
           role: 'SOME_OTHER_ROLE' as any,
         }) as ExecutionContext;
@@ -148,7 +149,7 @@ describe('RolesGuard', () => {
           return null;
         });
 
-        expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
+        expect(() => guard.canActivate(context)).toThrow(ForbiddenError);
       });
 
       it('should return true if no required roles metadata is present', () => {

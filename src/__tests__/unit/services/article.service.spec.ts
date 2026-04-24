@@ -2,11 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { prismaMock, resetPrismaMock } from 'src/__tests__/prisma-mock';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, Role, Status } from '@prisma/client';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
 import { ArticleService } from 'src/article/article.service';
 import { CreateArticleDto } from 'src/article/dto/create-article.dto';
 import { UpdateArticleDto } from 'src/article/dto/update-article.dto';
+import { ForbiddenError, NotFoundError } from 'src/common/errors/custom-error';
 
 describe('ArticleService', () => {
   let articleService: ArticleService;
@@ -95,7 +95,7 @@ describe('ArticleService', () => {
       prismaMock.article.findUnique.mockResolvedValue(null);
 
       await expect(articleService.findById(articleId)).rejects.toThrow(
-        NotFoundException,
+        NotFoundError,
       );
       await expect(articleService.findById(articleId)).rejects.toThrow(
         `Article with id ${articleId} not found`,
@@ -164,7 +164,7 @@ describe('ArticleService', () => {
 
       await expect(
         articleService.update(articleId, updateArticleDto),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
     });
 
     it('should throw any error', async () => {
@@ -198,7 +198,7 @@ describe('ArticleService', () => {
 
       await expect(
         articleService.delete(articleId, userId, Role.viewer),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
     });
 
     it('should respond 403 if user can not delete article', async () => {
@@ -206,7 +206,7 @@ describe('ArticleService', () => {
 
       await expect(
         articleService.delete(articleId, userId, Role.editor),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
     });
   });
 });

@@ -1,14 +1,10 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
 import { ROLES_KEY } from '../../common/decorators/roles.decorator';
 import { RequestWithUser } from '../entities/auth.entity';
 import { IS_PUBLIC_KEY } from 'src/common/decorators/public.decorator';
+import { ForbiddenError } from 'src/common/errors/custom-error';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -31,18 +27,18 @@ export class RolesGuard implements CanActivate {
 
     if (user.role === Role.viewer) {
       if (request.method !== 'GET') {
-        throw new ForbiddenException('Viewer role has read-only access');
+        throw new ForbiddenError('Viewer role has read-only access');
       }
       return true;
     }
 
     if (user.role === Role.editor) {
       if (request.url.startsWith('/category') && request.method !== 'GET') {
-        throw new ForbiddenException('Editors cannot manage categories');
+        throw new ForbiddenError('Editors cannot manage categories');
       }
 
       if (request.url.startsWith('/user') && request.method === 'POST') {
-        throw new ForbiddenException('Editors cannot create new user');
+        throw new ForbiddenError('Editors cannot create new user');
       }
 
       return true;
@@ -56,7 +52,7 @@ export class RolesGuard implements CanActivate {
     if (!requiredRoles) return true;
 
     const hasRole = requiredRoles.includes(user.role);
-    if (!hasRole) throw new ForbiddenException('Insufficient permissions');
+    if (!hasRole) throw new ForbiddenError('Insufficient permissions');
 
     return true;
   }

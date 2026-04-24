@@ -20,11 +20,12 @@
     "noFallthroughCasesInSwitch": false,
     "types": ["node", "jest"]
   },
-    "include": [
+  "include": [
     "src/**/*.ts",
     "test/**/*.ts",
     "prisma/seed.ts",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "src/common/errors/.error.ts"
   ],
   "exclude": ["node_modules"]
 }

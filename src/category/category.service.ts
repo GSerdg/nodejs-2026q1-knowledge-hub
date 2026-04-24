@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
+import { NotFoundError } from 'src/common/errors/custom-error';
 
 @Injectable()
 export class CategoryService {
@@ -17,7 +18,7 @@ export class CategoryService {
     const category = await this.prisma.category.findUnique({ where: { id } });
 
     if (!category) {
-      throw new NotFoundException(`Category with id ${id} not found`);
+      throw new NotFoundError(`Category with id ${id} not found`);
     }
 
     return category;
@@ -33,7 +34,7 @@ export class CategoryService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === PRISMA_ERROR_CODES.NOT_FOUND) {
-          throw new NotFoundException(`Category with id ${id} not found`);
+          throw new NotFoundError(`Category with id ${id} not found`);
         }
       }
 
@@ -47,7 +48,7 @@ export class CategoryService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === PRISMA_ERROR_CODES.NOT_FOUND) {
-          throw new NotFoundException(`Category with id ${id} not found`);
+          throw new NotFoundError(`Category with id ${id} not found`);
         }
       }
 
