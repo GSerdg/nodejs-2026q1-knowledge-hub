@@ -1,10 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { WinstonModule } from 'nest-winston';
+import { getWinstonConfig } from './common/logger/logger.config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const port = process.env.PORT || 4000;
+  const winstonLogger = WinstonModule.createLogger(getWinstonConfig());
+
+  const app = await NestFactory.create(AppModule, { logger: winstonLogger });
 
   const config = new DocumentBuilder()
     .setTitle('Knowledge Hub API')
@@ -39,6 +44,22 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(4000);
+  await app.listen(port);
+
+  Logger.log(
+    `Application is running on: http://localhost:${port}`,
+    'Bootstrap',
+  );
+
+  process.on('uncaughtException', (err) => {
+    winstonLogger.error('Uncaught Exception', err.stack);
+    app.close().then(() => process.exit(1));
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    winstonLogger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    app.close().then(() => process.exit(1));
+  });
 }
+
 bootstrap();
