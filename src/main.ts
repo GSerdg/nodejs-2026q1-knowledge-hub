@@ -47,22 +47,40 @@ async function bootstrap() {
 
   app.useGlobalFilters(new AllExceptionsFilter());
 
+  const handleFatalError = (message: string, err: any) => {
+    winstonLogger.error(message, err instanceof Error ? err.stack : err);
+
+    process.stderr.write(`${message} - Graceful shutdown initiated...\n`);
+
+    setTimeout(() => {
+      process.stderr.write('Forced exit by timeout.\n');
+      process.exit(1);
+    }, 2000);
+
+    app
+      .close()
+      .then(() => {
+        process.stdout.write('App closed successfully.\n');
+        process.exit(1);
+      })
+      .catch(() => {
+        process.exit(1);
+      });
+  };
+
+  process.on('uncaughtException', (err) =>
+    handleFatalError('Uncaught Exception', err),
+  );
+  process.on('unhandledRejection', (reason) =>
+    handleFatalError('Unhandled Rejection', reason),
+  );
+
   await app.listen(port);
 
   Logger.log(
     `Application is running on: http://localhost:${port}`,
     'Bootstrap',
   );
-
-  process.on('uncaughtException', (err) => {
-    winstonLogger.error('Uncaught Exception', err.stack);
-    app.close().then(() => process.exit(1));
-  });
-
-  process.on('unhandledRejection', (reason, promise) => {
-    winstonLogger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    app.close().then(() => process.exit(1));
-  });
 }
 
 bootstrap();
