@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard'; // Проверь путь
 import { Reflector } from '@nestjs/core';
-import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { ExecutionContext } from '@nestjs/common';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { UnauthorizedError } from 'src/common/errors/custom-error';
 
 describe('JwtAuthGuard', () => {
   let guard: JwtAuthGuard;
@@ -72,10 +73,8 @@ describe('JwtAuthGuard', () => {
       expect(guard.handleRequest(null, user)).toBe(user);
     });
 
-    it('should throw UnauthorizedException if user not found', () => {
-      expect(() => guard.handleRequest(null, null)).toThrow(
-        UnauthorizedException,
-      );
+    it('should throw UnauthorizedError if user not found', () => {
+      expect(() => guard.handleRequest(null, null)).toThrow(UnauthorizedError);
       expect(() => guard.handleRequest(null, null)).toThrow(
         'Invalid token or absent',
       );

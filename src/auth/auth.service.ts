@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { SignupDto } from './dto/signup.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, Role, User } from '@prisma/client';
@@ -12,6 +7,11 @@ import { PasswordService } from 'src/common/password.service';
 import { JwtService } from '@nestjs/jwt';
 import { RefreshDto } from './dto/refresh.dto';
 import { MyJwtPayload } from './entities/auth.entity';
+import {
+  ForbiddenError,
+  UnauthorizedError,
+  ValidationError,
+} from 'src/common/errors/custom-error';
 
 const select = {
   id: true,
@@ -60,7 +60,7 @@ export class AuthService {
 
       return userData;
     } catch (error) {
-      throw new ForbiddenException('Refresh token is invalid or expired');
+      throw new ForbiddenError('Refresh token is invalid or expired');
     }
   }
 
@@ -77,7 +77,7 @@ export class AuthService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
-          throw new BadRequestException(
+          throw new ValidationError(
             `User with this login: ${dto.login} already exists`,
           );
         }
@@ -96,7 +96,7 @@ export class AuthService {
       !user ||
       !(await PasswordService.compare(dto.password, user.password))
     ) {
-      throw new ForbiddenException('Unknown login or password');
+      throw new ForbiddenError('Unknown login or password');
     }
 
     return await this.generateTokens(user);
@@ -104,7 +104,7 @@ export class AuthService {
 
   async refresh(dto: RefreshDto) {
     if (!dto?.refreshToken) {
-      throw new UnauthorizedException('Refresh token is required');
+      throw new UnauthorizedError('Refresh token is required');
     }
 
     const { login } = await this.verifyRefreshToken(dto.refreshToken);
@@ -114,7 +114,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new ForbiddenException('Authorization failed');
+      throw new ForbiddenError('Authorization failed');
     }
 
     return await this.generateTokens(user);

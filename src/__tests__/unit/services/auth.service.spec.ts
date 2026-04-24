@@ -7,12 +7,12 @@ import { Prisma, Role, User } from '@prisma/client';
 import { AuthService } from 'src/auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { PasswordService } from 'src/common/password.service';
-import {
-  BadRequestException,
-  ForbiddenException,
-  UnauthorizedException,
-} from '@nestjs/common';
 import { RefreshDto } from 'src/auth/dto/refresh.dto';
+import {
+  ForbiddenError,
+  UnauthorizedError,
+  ValidationError,
+} from 'src/common/errors/custom-error';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -97,7 +97,7 @@ describe('AuthService', () => {
       prismaMock.user.create.mockRejectedValue(prismaError);
 
       await expect(authService.create(signupDto)).rejects.toThrow(
-        BadRequestException,
+        ValidationError,
       );
     });
 
@@ -133,18 +133,14 @@ describe('AuthService', () => {
     it('should respond 400 if unknown login', async () => {
       prismaMock.user.findUnique.mockResolvedValue(null);
 
-      await expect(authService.login(loginDto)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(authService.login(loginDto)).rejects.toThrow(ForbiddenError);
     });
 
     it('should respond 400 if unknown password compare error', async () => {
       prismaMock.user.findUnique.mockResolvedValue(mockUser);
       vi.spyOn(PasswordService, 'compare').mockResolvedValue(false);
 
-      await expect(authService.login(loginDto)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(authService.login(loginDto)).rejects.toThrow(ForbiddenError);
     });
   });
 
@@ -167,16 +163,14 @@ describe('AuthService', () => {
     });
 
     it('should respond 401 if refresh token is empty', async () => {
-      await expect(authService.refresh({})).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(authService.refresh({})).rejects.toThrow(UnauthorizedError);
     });
 
     it('should respond 400 if user not found', async () => {
       prismaMock.user.findUnique.mockResolvedValue(null);
 
       await expect(authService.refresh(refreshDto)).rejects.toThrow(
-        ForbiddenException,
+        ForbiddenError,
       );
     });
   });

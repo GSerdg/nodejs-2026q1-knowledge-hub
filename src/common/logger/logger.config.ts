@@ -25,6 +25,7 @@ export const getWinstonConfig = () => {
         filename: 'logs/app-%DATE%.log',
         datePattern: 'YYYY-MM-DD-HH-mm-ss',
         maxSize: maxFileSize,
+        zippedArchive: false,
         format: winston.format.combine(
           winston.format.timestamp(),
           winston.format.json(),

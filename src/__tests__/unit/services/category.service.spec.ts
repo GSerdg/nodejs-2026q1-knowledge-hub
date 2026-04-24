@@ -1,8 +1,8 @@
-import { NotFoundException } from '@nestjs/common';
 import { TestingModule, Test } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { prismaMock, resetPrismaMock } from 'src/__tests__/prisma-mock';
 import { CategoryService } from 'src/category/category.service';
+import { NotFoundError } from 'src/common/errors/custom-error';
 import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -57,11 +57,11 @@ describe('CategoryService', () => {
       expect(result).toEqual(mockCategory);
     });
 
-    it('should throw NotFoundException if category not found', async () => {
+    it('should throw NotFoundError if category not found', async () => {
       prismaMock.category.findUnique.mockResolvedValue(null);
 
       await expect(categoryService.findById('unknown')).rejects.toThrow(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });
@@ -86,7 +86,7 @@ describe('CategoryService', () => {
       expect(result.name).toBe('Tech');
     });
 
-    it('should throw NotFoundException on Prisma P2025 error', async () => {
+    it('should throw NotFoundError on Prisma P2025 error', async () => {
       const prismaError = new Prisma.PrismaClientKnownRequestError(
         'Not found',
         {
@@ -99,7 +99,7 @@ describe('CategoryService', () => {
 
       await expect(
         categoryService.update('invalid', mockCategoryDto),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
     });
 
     it('should throw any error', async () => {
@@ -120,7 +120,7 @@ describe('CategoryService', () => {
       expect(result.id).toBe(categoryId);
     });
 
-    it('should throw NotFoundException on delete if category does not exist', async () => {
+    it('should throw NotFoundError on delete if category does not exist', async () => {
       const prismaError = new Prisma.PrismaClientKnownRequestError(
         'Not found',
         {
@@ -131,7 +131,7 @@ describe('CategoryService', () => {
       prismaMock.category.delete.mockRejectedValue(prismaError);
 
       await expect(categoryService.delete('invalid')).rejects.toThrow(
-        NotFoundException,
+        NotFoundError,
       );
     });
 
