@@ -17,15 +17,44 @@ git clone {repository URL}
 npm install
 ```
 
-## Running application
+## Environment
+
+Copy the example environment file and adjust values if needed:
 
 ```
-npm start
+cp .env.example .env
 ```
 
-After starting the app on port (4000 as default) you can open
-in your browser OpenAPI documentation by typing http://localhost:4000/doc/.
-For more information about OpenAPI/Swagger please visit https://swagger.io/.
+The project expects PostgreSQL settings and JWT secrets in `.env`. For Docker Compose the `POSTGRES_HOST` should be set to `db`.
+
+## Running in development
+
+This starts the database in Docker and runs the API locally in NestJS watch mode.
+
+```
+docker compose up -d db
+npm run start:dev
+```
+
+OpenAPI docs will be available at http://localhost:4000/doc/ after the app starts.
+
+## Running in production
+
+The production setup runs the full stack inside Docker.
+
+```
+docker compose up --build
+```
+
+This command builds the API image, starts the PostgreSQL database, and brings the service up on port `4000`.
+
+After startup, open http://localhost:4000/doc/ to access the API documentation.
+
+### Stop production services
+
+```
+docker compose down
+```
 
 ## Docker
 
@@ -38,12 +67,6 @@ You can run it locally using Docker or Docker Compose if you have the repository
 ## Testing
 
 After application running open new terminal and enter:
-
-To run all tests without authorization
-
-```
-npm run test
-```
 
 To run only one of all test suites
 
@@ -73,6 +96,18 @@ To run RBAC (role-based access control) tests
 
 ```
 npm run test:rbac
+```
+
+To run unit tests
+
+```
+npm run test:unit
+```
+
+To run all tests with authorization and unit tests
+
+```
+npm run test
 ```
 
 ### Auto-fix and format
