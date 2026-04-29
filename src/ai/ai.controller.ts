@@ -99,20 +99,22 @@ export class AiController {
     );
 
     const translate = await this.geminiService.generateText(prompt);
+    const cleanJsonTranslate =
+      translate?.replace(/```json|```/g, '').trim() ?? '';
 
     try {
-      const parsed = JSON.parse(translate ?? '');
+      const parsed = JSON.parse(cleanJsonTranslate);
 
       return {
         articleId,
         translatedText: parsed.translatedText ?? '',
         detectedLanguage:
-          translateDto.sourceLanguage ?? parsed.detectedLanguage ?? 'unknown',
+          parsed.detectedLanguage ?? translateDto.sourceLanguage ?? 'unknown',
       };
     } catch {
       return {
         articleId,
-        translatedText: translate ?? '',
+        translatedText: cleanJsonTranslate,
         detectedLanguage: translateDto.sourceLanguage || 'detected_by_ai',
       };
     }
@@ -140,9 +142,10 @@ export class AiController {
     const prompt = ArticlePrompts.analyze(article.content, analyzeDto.task);
 
     const analyze = await this.geminiService.generateText(prompt);
+    const cleanJsonAnalyze = analyze?.replace(/```json|```/g, '').trim() ?? '';
 
     try {
-      const parsed = JSON.parse(analyze ?? '');
+      const parsed = JSON.parse(cleanJsonAnalyze ?? '');
 
       return {
         articleId,
@@ -153,7 +156,7 @@ export class AiController {
     } catch {
       return {
         articleId,
-        analysis: analyze ?? '',
+        analysis: cleanJsonAnalyze,
         suggestions: [],
         severity: Severity.INFO,
       };
