@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsOptional } from 'class-validator';
 
 export enum AnalysisTask {
@@ -8,6 +9,13 @@ export enum AnalysisTask {
 }
 
 export class AnalyzeArticleDto {
+  @ApiProperty({
+    enum: AnalysisTask,
+    enumName: 'AnalysisTask',
+    example: AnalysisTask.REVIEW,
+    required: false,
+    default: AnalysisTask.REVIEW,
+  })
   @IsOptional()
   @IsEnum(AnalysisTask)
   task?: AnalysisTask = AnalysisTask.REVIEW;

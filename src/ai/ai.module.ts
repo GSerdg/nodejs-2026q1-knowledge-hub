@@ -8,7 +8,7 @@ import { UsageTrackerService } from './services/usage-tracker.service';
 
 @Module({
   imports: [
-    HttpModule.register({ timeout: 10000, maxRedirects: 5 }),
+    HttpModule.register({ timeout: 30000, maxRedirects: 5 }),
     ConfigModule,
     ArticleModule,
   ],

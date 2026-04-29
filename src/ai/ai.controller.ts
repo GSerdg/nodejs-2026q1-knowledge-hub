@@ -14,12 +14,19 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { GeminiService } from './services/gemini.service';
-import { SummarizeArticleEntity } from './entities/ai-responses.entity';
+import {
+  AnalyzeArticleEntity,
+  Severity,
+  SummarizeArticleEntity,
+  TranslateArticleEntity,
+} from './entities/ai-responses.entity';
 import { SummarizeArticleDto } from './dto/summarize-article.dto';
 import { UsageTrackerService } from './services/usage-tracker.service';
 import { ArticleService } from 'src/article/article.service';
 import { ArticlePrompts } from './prompts/article-prompts';
 import { Public } from 'src/common/decorators/public.decorator';
+import { TranslateArticleDto } from './dto/translate-article.dto';
+import { AnalyzeArticleDto } from './dto/analyze-article.dto';
 
 @ApiTags('ai')
 @ApiBearerAuth('access-token')
@@ -45,7 +52,7 @@ export class AiController {
   async summarize(
     @Param('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
     @Body() summarizeDto: SummarizeArticleDto,
-  ) {
+  ): Promise<SummarizeArticleEntity> {
     this.usageTracker.increment('summarize');
 
     const article = await this.articleService.findById(articleId);
@@ -55,6 +62,101 @@ export class AiController {
       summarizeDto.maxLength,
     );
 
-    return await this.geminiService.generateText(prompt);
+    const summary = await this.geminiService.generateText(prompt);
+
+    return {
+      articleId,
+      summary: summary ?? '',
+      originalLength: article.content.length,
+      summaryLength: summary?.length ?? 0,
+    };
+  }
+
+  @Public()
+  @Post('articles/:articleId/translate')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Translate Article' })
+  @ApiParam({ name: 'articleId', format: 'uuid' })
+  @ApiResponse({
+    status: 200,
+    description: 'article translated',
+    type: TranslateArticleEntity,
+  })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 404, description: 'Article does not exist' })
+  async translate(
+    @Param('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
+    @Body() translateDto: TranslateArticleDto,
+  ): Promise<TranslateArticleEntity> {
+    this.usageTracker.increment('translate');
+
+    const article = await this.articleService.findById(articleId);
+
+    const prompt = ArticlePrompts.translate(
+      article.content,
+      translateDto.targetLanguage,
+      translateDto.sourceLanguage,
+    );
+
+    const translate = await this.geminiService.generateText(prompt);
+
+    try {
+      const parsed = await JSON.parse(translate ?? '');
+
+      return {
+        articleId,
+        translatedText: parsed.translatedText ?? '',
+        detectedLanguage:
+          translateDto.sourceLanguage ?? parsed.detectedLanguage ?? 'unknown',
+      };
+    } catch {
+      return {
+        articleId,
+        translatedText: translate ?? '',
+        detectedLanguage: translateDto.sourceLanguage || 'detected_by_ai',
+      };
+    }
+  }
+
+  @Public()
+  @Post('articles/:articleId/analyze')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Analyze Article Content' })
+  @ApiParam({ name: 'articleId', format: 'uuid' })
+  @ApiResponse({
+    status: 200,
+    description: 'article analyzed',
+    type: AnalyzeArticleEntity,
+  })
+  @ApiResponse({ status: 404, description: 'Article does not exist' })
+  async analyze(
+    @Param('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
+    @Body() analyzeDto: AnalyzeArticleDto,
+  ): Promise<AnalyzeArticleEntity> {
+    this.usageTracker.increment('analyze');
+
+    const article = await this.articleService.findById(articleId);
+
+    const prompt = ArticlePrompts.analyze(article.content, analyzeDto.task);
+
+    const analyze = await this.geminiService.generateText(prompt);
+
+    try {
+      const parsed = await JSON.parse(analyze ?? '');
+
+      return {
+        articleId,
+        analysis: parsed.analysis ?? '',
+        suggestions: parsed.suggestions ?? [],
+        severity: parsed.severity ?? '',
+      };
+    } catch {
+      return {
+        articleId,
+        analysis: analyze ?? '',
+        suggestions: [],
+        severity: Severity.INFO,
+      };
+    }
   }
 }
