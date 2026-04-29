@@ -22,8 +22,20 @@ export class GeminiService {
     const BASE_URL = this.configService.get<string>('GEMINI_API_BASE_URL');
     const MODEL = this.configService.get<string>('GEMINI_MODEL');
 
-    const url = `${BASE_URL}/v1/models/${MODEL}:generateContent?key=${API_KEY}`;
+    const proxyHost = this.configService.get('PROXY_HOST');
+    const proxyPort = this.configService.get('PROXY_PORT');
 
+    const url = `${BASE_URL}/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+
+    const axiosConfig: any = {};
+
+    if (proxyHost && proxyPort) {
+      axiosConfig.proxy = {
+        host: proxyHost,
+        port: Number(proxyPort),
+        protocol: 'http',
+      };
+    }
     const payload = {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
@@ -39,7 +51,7 @@ export class GeminiService {
     while (attempts < maxAttempts) {
       try {
         const response = await lastValueFrom(
-          this.httpService.post(url, payload),
+          this.httpService.post(url, payload, axiosConfig),
         );
 
         const text = response.data.candidates?.[0]?.content?.parts?.[0]?.text;

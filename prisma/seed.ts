@@ -46,8 +46,9 @@ async function main() {
 
   const art1 = await prisma.article.create({
     data: {
-      title: 'NestJS Guide',
-      content: 'Long content about Nest...',
+      title: 'Bitcoin: Digital Gold or Financial Bubble?',
+      content:
+        'Cryptocurrencies have become one of the most discussed financial phenomena of the 21st century. Bitcoin, which emerged in 2009 as a decentralized alternative to traditional money, has evolved from a hobby for programmers into an asset purchased by the world is largest investment funds. Proponents of blockchain technology argue that Bitcoin is an ideal tool for capital preservation. Unlike the US dollar or the Euro, its supply is strictly limited to 21 million coins, making it hedge-resistant against inflation. Thanks to the distributed ledger, transactions cannot be forged, and the absence of a central bank makes the system resistant to censorship. However, critics point to extreme price volatility. An asset is price can rise or fall by 10-20% in a single day, making it risky for use as a daily means of payment. Furthermore, the massive amount of electricity required for mining raises serious concerns among environmentalists. Despite the controversy, Bitcoin has already changed the perception of finance. Many countries are beginning to implement regulations for digital assets, and corporations such as Tesla and MicroStrategy hold part of their reserves in cryptocurrency. Whether this is the beginning of a new financial era or a temporary trend, only time will tell.',
       status: Status.published,
       authorId: admin.id,
       categoryId: catDev.id,
@@ -57,8 +58,9 @@ async function main() {
 
   await prisma.article.create({
     data: {
-      title: 'Dockerize Apps',
-      content: 'How to use docker...',
+      title: 'The Future of Edge Computing in IoT Networks',
+      content:
+        'Edge computing is rapidly transforming how data is processed in the Internet of Things (IoT). Traditionally, IoT devices collected raw data and sent it to a centralized cloud server for analysis. However, as the number of connected devices reaches billions, this model faces critical bottlenecks: high latency, bandwidth congestion, and privacy concerns. By shifting computation from the cloud to the "edge" of the network—closer to the data source—organizations can achieve near-instantaneous processing. For instance, an autonomous vehicle cannot afford the 200ms delay required to send sensor data to a remote server and wait for a braking command. Edge nodes process this data locally, ensuring safety and reliability. Despite its benefits, implementing edge computing is not without challenges. Resource constraints are a primary issue; edge nodes often have limited CPU power and memory compared to cloud data centers. Additionally, securing a distributed network of thousands of edge devices is significantly more complex than securing a single data center. Developers must find a balance between performance and security to prevent the network from becoming a massive botnet.',
       status: Status.published,
       authorId: editor.id,
       categoryId: catDev.id,

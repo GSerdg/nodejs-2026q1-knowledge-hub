@@ -1,4 +1,11 @@
-import { Body, Controller, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Param,
+  ParseUUIDPipe,
+  Post,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -10,6 +17,9 @@ import { GeminiService } from './services/gemini.service';
 import { SummarizeArticleEntity } from './entities/ai-responses.entity';
 import { SummarizeArticleDto } from './dto/summarize-article.dto';
 import { UsageTrackerService } from './services/usage-tracker.service';
+import { ArticleService } from 'src/article/article.service';
+import { ArticlePrompts } from './prompts/article-prompts';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('ai')
 @ApiBearerAuth('access-token')
@@ -17,10 +27,13 @@ import { UsageTrackerService } from './services/usage-tracker.service';
 export class AiController {
   constructor(
     private readonly geminiService: GeminiService,
+    private readonly articleService: ArticleService,
     private readonly usageTracker: UsageTrackerService,
   ) {}
 
+  @Public()
   @Post('articles/:articleId/summarize')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Summarize Article' })
   @ApiParam({ name: 'articleId', format: 'uuid' })
   @ApiResponse({
@@ -31,10 +44,17 @@ export class AiController {
   @ApiResponse({ status: 404, description: 'Article does not exist' })
   async summarize(
     @Param('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
-    @Body() summarizeData: SummarizeArticleDto,
+    @Body() summarizeDto: SummarizeArticleDto,
   ) {
     this.usageTracker.increment('summarize');
 
-    return await this.geminiService.summarize(prompt);
+    const article = await this.articleService.findById(articleId);
+
+    const prompt = ArticlePrompts.summarize(
+      article.content,
+      summarizeDto.maxLength,
+    );
+
+    return await this.geminiService.generateText(prompt);
   }
 }
