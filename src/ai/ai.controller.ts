@@ -101,7 +101,7 @@ export class AiController {
     const translate = await this.geminiService.generateText(prompt);
 
     try {
-      const parsed = await JSON.parse(translate ?? '');
+      const parsed = JSON.parse(translate ?? '');
 
       return {
         articleId,
@@ -142,7 +142,7 @@ export class AiController {
     const analyze = await this.geminiService.generateText(prompt);
 
     try {
-      const parsed = await JSON.parse(analyze ?? '');
+      const parsed = JSON.parse(analyze ?? '');
 
       return {
         articleId,
