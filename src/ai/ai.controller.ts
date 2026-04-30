@@ -5,6 +5,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -13,24 +14,26 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { GeminiService } from './services/gemini.service';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { ArticleService } from 'src/article/article.service';
+import { Public } from 'src/common/decorators/public.decorator';
+import { AnalyzeArticleDto } from './dto/analyze-article.dto';
+import { SummarizeArticleDto } from './dto/summarize-article.dto';
+import { TranslateArticleDto } from './dto/translate-article.dto';
 import {
   AnalyzeArticleEntity,
   Severity,
   SummarizeArticleEntity,
   TranslateArticleEntity,
 } from './entities/ai-responses.entity';
-import { SummarizeArticleDto } from './dto/summarize-article.dto';
-import { UsageTrackerService } from './services/usage-tracker.service';
-import { ArticleService } from 'src/article/article.service';
 import { ArticlePrompts } from './prompts/article-prompts';
-import { Public } from 'src/common/decorators/public.decorator';
-import { TranslateArticleDto } from './dto/translate-article.dto';
-import { AnalyzeArticleDto } from './dto/analyze-article.dto';
+import { GeminiService } from './services/gemini.service';
+import { UsageTrackerService } from './services/usage-tracker.service';
 
 @ApiTags('ai')
 @ApiBearerAuth('access-token')
 @Controller('ai')
+@UseGuards(ThrottlerGuard)
 export class AiController {
   constructor(
     private readonly geminiService: GeminiService,
@@ -49,6 +52,8 @@ export class AiController {
     type: SummarizeArticleEntity,
   })
   @ApiResponse({ status: 404, description: 'Article does not exist' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
+  @ApiResponse({ status: 503, description: 'Service unavailable' })
   async summarize(
     @Param('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
     @Body() summarizeDto: SummarizeArticleDto,
@@ -84,6 +89,8 @@ export class AiController {
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Article does not exist' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
+  @ApiResponse({ status: 503, description: 'Service unavailable' })
   async translate(
     @Param('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
     @Body() translateDto: TranslateArticleDto,
@@ -131,6 +138,8 @@ export class AiController {
     type: AnalyzeArticleEntity,
   })
   @ApiResponse({ status: 404, description: 'Article does not exist' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
+  @ApiResponse({ status: 503, description: 'Service unavailable' })
   async analyze(
     @Param('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
     @Body() analyzeDto: AnalyzeArticleDto,
