@@ -174,14 +174,6 @@ export class AiController {
   ): Promise<AnalyzeArticleEntity> {
     const article = await this.articleService.findById(articleId);
 
-    const cacheData = await this.cacheService.get<AnalyzeArticleEntity>(
-      articleId,
-      analyzeDto,
-      article.updatedAt,
-    );
-
-    if (cacheData) return cacheData;
-
     const prompt = ArticlePrompts.analyze(article.content, analyzeDto.task);
 
     const analyze = await this.geminiService.generateText(prompt, 'analyze');
@@ -190,18 +182,13 @@ export class AiController {
     try {
       const parsed = JSON.parse(cleanJsonAnalyze ?? '');
 
-      const response = {
+      return {
         articleId,
         analysis: parsed.analysis ?? '',
         suggestions: parsed.suggestions ?? [],
         severity: parsed.severity ?? '',
       };
-
-      this.cacheService.set(articleId, analyzeDto, article.updatedAt, response);
-
-      return response;
     } catch {
-      // ответы, которые не парсятся считаем не достойными кэширования.
       return {
         articleId,
         analysis: cleanJsonAnalyze,
