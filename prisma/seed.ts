@@ -70,8 +70,9 @@ async function main() {
 
   await prisma.article.create({
     data: {
-      title: 'Old UI Trends',
-      content: 'Flash and skeuomorphism were popular in 2010...',
+      title: ' Why Edge Computing is the Future of the Internet',
+      content:
+        'For years, cloud computing has been the backbone of the digital world. However, as the number of IoT devices grows, a new paradigm called Edge Computing is taking over. Unlike cloud computing, where data is processed in distant data centers, edge computing brings computation and data storage closer to the sources of data. This shift is crucial for applications that require real-time processing, such as autonomous vehicles and industrial automation. By reducing the distance data must travel, edge computing significantly lowers latency and saves bandwidth. Moreover, it enhances security by keeping sensitive information local rather than transmitting it across the global network. As 5G technology rolls out, we can expect edge computing to become an invisible but essential part of our daily infrastructure.',
       status: Status.archived,
       authorId: admin.id,
       categoryId: catDesign.id,
@@ -81,8 +82,9 @@ async function main() {
 
   await prisma.article.create({
     data: {
-      title: 'Future of NestJS',
-      content: 'This article is still a draft and not visible to viewers...',
+      title: 'Less is More: How Minimalism Can Improve Mental Health',
+      content:
+        'Minimalism is often misunderstood as just an aesthetic trend or a way to decorate a house with white furniture. In reality, it is a conscious lifestyle choice focused on removing distractions to make room for what truly matters. In an era of constant information overload and aggressive consumerism, minimalism offers a psychological sanctuary. Research suggests that physical clutter in our surroundings can lead to mental fatigue and increased levels of cortisol, the stress hormone. By simplifying our possessions and commitments, we regain control over our attention and time. Minimalism is not about owning nothing; it is about making sure that the things you do own serve a purpose or bring genuine joy. Adopting this mindset helps individuals focus on personal growth, relationships, and experiences rather than material accumulation.',
       status: Status.draft,
       authorId: editor.id,
       categoryId: catDev.id,
@@ -92,8 +94,9 @@ async function main() {
 
   const art5 = await prisma.article.create({
     data: {
-      title: 'New Knowledge Hub Release',
-      content: 'Version 2.0 with PostgreSQL is finally here!',
+      title: 'Glowing in the Dark: The Secret Language of the Deep Ocean',
+      content:
+        'The deep ocean is one of the least explored places on Earth, characterized by extreme pressure and total darkness. Yet, in this void, life has found a spectacular way to communicate: bioluminescence. Over 75% of deep-sea creatures are estimated to produce their own light through complex chemical reactions. Marine biologists have discovered that this biological light serves multiple purposes. Some species use it as a flashlight to find prey, while others use glowing lures to attract a meal. Some even use "burglar alarms"—flashes of light that expose their predators to even larger hunters. The chemical process, involving a molecule called luciferin and an enzyme called luciferase, is incredibly efficient, producing almost no heat. Studying these organisms not only reveals the secrets of evolution but also inspires new medical technologies and sustainable lighting solutions for humans.',
       status: Status.published,
       authorId: admin.id,
       categoryId: catNews.id,

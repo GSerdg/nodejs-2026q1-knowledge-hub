@@ -7,6 +7,7 @@ import {
   ServiceUnavailableError,
   TooManyRequestsError,
 } from 'src/common/errors/custom-error';
+import { EndpointType, UsageTrackerService } from './usage-tracker.service';
 
 @Injectable()
 export class GeminiService {
@@ -15,9 +16,10 @@ export class GeminiService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    private readonly usageTracker: UsageTrackerService,
   ) {}
 
-  async generateText(prompt: string) {
+  async generateText(prompt: string, endpointName: EndpointType) {
     const API_KEY = this.configService.get<string>('GEMINI_API_KEY');
     const BASE_URL = this.configService.get<string>('GEMINI_API_BASE_URL');
     const MODEL = this.configService.get<string>('GEMINI_MODEL');
@@ -50,15 +52,18 @@ export class GeminiService {
 
     while (attempts < maxAttempts) {
       try {
-        const response = await lastValueFrom(
+        const { data } = await lastValueFrom(
           this.httpService.post(url, payload, axiosConfig),
         );
 
-        const text = response.data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const tokens = data?.usageMetadata?.totalTokenCount || 0;
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!text || typeof text !== 'string') {
           throw new Error('Empty response from Gemini API');
         }
+
+        this.usageTracker.increment(endpointName, tokens);
 
         return text;
       } catch (error) {

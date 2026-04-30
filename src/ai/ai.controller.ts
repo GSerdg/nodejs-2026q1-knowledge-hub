@@ -28,7 +28,6 @@ import {
 } from './entities/ai-responses.entity';
 import { ArticlePrompts } from './prompts/article-prompts';
 import { GeminiService } from './services/gemini.service';
-import { UsageTrackerService } from './services/usage-tracker.service';
 import { CacheService } from './services/cache.service';
 
 @ApiTags('ai')
@@ -39,7 +38,6 @@ export class AiController {
   constructor(
     private readonly geminiService: GeminiService,
     private readonly articleService: ArticleService,
-    private readonly usageTracker: UsageTrackerService,
     private readonly cacheService: CacheService,
   ) {}
 
@@ -60,8 +58,6 @@ export class AiController {
     @Param('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
     @Body() summarizeDto: SummarizeArticleDto,
   ): Promise<SummarizeArticleEntity> {
-    this.usageTracker.increment('summarize');
-
     const article = await this.articleService.findById(articleId);
 
     const cacheData = await this.cacheService.get<SummarizeArticleEntity>(
@@ -77,7 +73,7 @@ export class AiController {
       summarizeDto.maxLength,
     );
 
-    const summary = await this.geminiService.generateText(prompt);
+    const summary = await this.geminiService.generateText(prompt, 'summarize');
     const response = {
       articleId,
       summary: summary ?? '',
@@ -108,8 +104,6 @@ export class AiController {
     @Param('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
     @Body() translateDto: TranslateArticleDto,
   ): Promise<TranslateArticleEntity> {
-    this.usageTracker.increment('translate');
-
     const article = await this.articleService.findById(articleId);
 
     const cacheData = await this.cacheService.get<TranslateArticleEntity>(
@@ -126,7 +120,10 @@ export class AiController {
       translateDto.sourceLanguage,
     );
 
-    const translate = await this.geminiService.generateText(prompt);
+    const translate = await this.geminiService.generateText(
+      prompt,
+      'translate',
+    );
     const cleanJsonTranslate =
       translate?.replace(/```json|```/g, '').trim() ?? '';
 
@@ -175,8 +172,6 @@ export class AiController {
     @Param('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
     @Body() analyzeDto: AnalyzeArticleDto,
   ): Promise<AnalyzeArticleEntity> {
-    this.usageTracker.increment('analyze');
-
     const article = await this.articleService.findById(articleId);
 
     const cacheData = await this.cacheService.get<AnalyzeArticleEntity>(
@@ -189,7 +184,7 @@ export class AiController {
 
     const prompt = ArticlePrompts.analyze(article.content, analyzeDto.task);
 
-    const analyze = await this.geminiService.generateText(prompt);
+    const analyze = await this.geminiService.generateText(prompt, 'analyze');
     const cleanJsonAnalyze = analyze?.replace(/```json|```/g, '').trim() ?? '';
 
     try {
