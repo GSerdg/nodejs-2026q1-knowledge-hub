@@ -29,6 +29,7 @@ import {
 import { ArticlePrompts } from './prompts/article-prompts';
 import { GeminiService } from './services/gemini.service';
 import { UsageTrackerService } from './services/usage-tracker.service';
+import { CacheService } from './services/cache.service';
 
 @ApiTags('ai')
 @ApiBearerAuth('access-token')
@@ -39,6 +40,7 @@ export class AiController {
     private readonly geminiService: GeminiService,
     private readonly articleService: ArticleService,
     private readonly usageTracker: UsageTrackerService,
+    private readonly cacheService: CacheService,
   ) {}
 
   @Public()
@@ -62,19 +64,30 @@ export class AiController {
 
     const article = await this.articleService.findById(articleId);
 
+    const cacheData = await this.cacheService.get<SummarizeArticleEntity>(
+      articleId,
+      summarizeDto,
+      article.updatedAt,
+    );
+
+    if (cacheData) return cacheData;
+
     const prompt = ArticlePrompts.summarize(
       article.content,
       summarizeDto.maxLength,
     );
 
     const summary = await this.geminiService.generateText(prompt);
-
-    return {
+    const response = {
       articleId,
       summary: summary ?? '',
       originalLength: article.content.length,
       summaryLength: summary?.length ?? 0,
     };
+
+    this.cacheService.set(articleId, summarizeDto, article.updatedAt, response);
+
+    return response;
   }
 
   @Public()
@@ -99,6 +112,14 @@ export class AiController {
 
     const article = await this.articleService.findById(articleId);
 
+    const cacheData = await this.cacheService.get<TranslateArticleEntity>(
+      articleId,
+      translateDto,
+      article.updatedAt,
+    );
+
+    if (cacheData) return cacheData;
+
     const prompt = ArticlePrompts.translate(
       article.content,
       translateDto.targetLanguage,
@@ -112,13 +133,23 @@ export class AiController {
     try {
       const parsed = JSON.parse(cleanJsonTranslate);
 
-      return {
+      const response = {
         articleId,
         translatedText: parsed.translatedText ?? '',
         detectedLanguage:
           parsed.detectedLanguage ?? translateDto.sourceLanguage ?? 'unknown',
       };
+
+      this.cacheService.set(
+        articleId,
+        translateDto,
+        article.updatedAt,
+        response,
+      );
+
+      return response;
     } catch {
+      // ответы, которые не парсятся считаем не достойными кэширования.
       return {
         articleId,
         translatedText: cleanJsonTranslate,
@@ -148,6 +179,14 @@ export class AiController {
 
     const article = await this.articleService.findById(articleId);
 
+    const cacheData = await this.cacheService.get<AnalyzeArticleEntity>(
+      articleId,
+      analyzeDto,
+      article.updatedAt,
+    );
+
+    if (cacheData) return cacheData;
+
     const prompt = ArticlePrompts.analyze(article.content, analyzeDto.task);
 
     const analyze = await this.geminiService.generateText(prompt);
@@ -156,13 +195,18 @@ export class AiController {
     try {
       const parsed = JSON.parse(cleanJsonAnalyze ?? '');
 
-      return {
+      const response = {
         articleId,
         analysis: parsed.analysis ?? '',
         suggestions: parsed.suggestions ?? [],
         severity: parsed.severity ?? '',
       };
+
+      this.cacheService.set(articleId, analyzeDto, article.updatedAt, response);
+
+      return response;
     } catch {
+      // ответы, которые не парсятся считаем не достойными кэширования.
       return {
         articleId,
         analysis: cleanJsonAnalyze,
