@@ -125,3 +125,74 @@ npm run format
 Press <kbd>F5</kbd> to debug.
 
 For more information, visit: https://code.visualstudio.com/docs/editor/debugging
+
+## AI Integration (Google Gemini)
+
+The Knowledge Hub API is extended with AI-powered features for article summarization, translation, and analysis using the **gemini-2.5-flash-light** model.
+
+### 1. How to obtain a Gemini API Key
+
+1. Go to [Google AI Studio](https://aistudio.google.com/).
+2. Log in with your Google account.
+3. Click the **"Get API key"** button in the sidebar.
+4. Click **"Create API key in new project"** or select an existing one.
+5. Copy your API key.
+
+### 2. Environment Setup
+
+Add the following variables to your `.env` file:
+
+```dotenv
+# Your API key from Google AI Studio
+GEMINI_API_KEY=your_actual_api_key_here
+
+# API Configuration
+GEMINI_API_BASE_URL=https://generativelanguage.googleapis.com
+GEMINI_MODEL=gemini-2.5-flash-light
+
+# Performance & Rate Limiting
+AI_RATE_LIMIT_RPM=15
+AI_CACHE_TTL_SEC=300
+```
+
+### 3. How to Run and Test AI Endpoints
+
+1. Ensure your `.env` is configured with a valid API key.
+2. Start the application: `npm run start:dev`.
+3. Use Swagger UI at `http://localhost:4000/doc/` or use the following endpoints:
+
+- **Summarize Article:** `POST /ai/articles/:articleId/summarize`
+  - Body: `{"maxLength": "short" | "medium" | "detailed"}`
+- **Translate Article:** `POST /ai/articles/:articleId/translate`
+  - Body: `{"targetLanguage": "Spanish", "sourceLanguage": "English"}`
+- **Analyze Content:** `POST /ai/articles/:articleId/analyze`
+  - Body: `{"task": "review" | "bugs" | "optimize" | "explain"}`
+
+### 4. Known Limitations
+
+- **Regional Availability:** Google AI is currently restricted in certain regions (e.g., Russia and Belarus). To access Google AI Studio and use the API:
+  - **VPN Required:** Use a reliable VPN service with a location where Google AI is available (e.g., USA, Germany, or UK).
+  - **Incognito Mode:** It is highly recommended to open Google AI Studio in **Incognito/Private mode** in your browser to avoid issues with regional cookies or cached account data.
+- **Free Tier Quotas:** The Google Gemini free tier has a limit of requests per minute (RPM). If you hit the limit (HTTP 429), wait for 60 seconds before retrying.
+- **Latency:** AI generation typically takes between 2 to 10 seconds depending on the article length.
+- **Regional Availability:** Google Gemini API may have restricted access in certain regions.
+- **Data Privacy:** On the free tier, Google may use submitted data to improve its models. Do not submit sensitive or confidential information.
+
+### 5. Testing via Proxy (Fiddler / Global Proxy)
+The Docker configuration is pre-configured to route AI traffic through a proxy on your host machine to bypass regional restrictions or for debugging.
+
+#### Fiddler Setup:
+1. **Download:** Install [Fiddler Classic](https://telerik.com).
+2. **Decrypt HTTPS:** Go to `Tools -> Options -> HTTPS` and check **"Decrypt HTTPS traffic"**.
+3. **Allow Connections:** Go to `Tools -> Options -> Connections` and check **"Allow remote computers to connect"**.
+4. **Ensure Port Match:** Ensure Fiddler is listening on port **8888** (as defined in `docker-compose.yaml`).
+
+#### How it works:
+The application in Docker uses `PROXY_HOST=host.docker.internal` and `PROXY_PORT=8888` by default. This allows the container to talk to Fiddler running on your Windows/Mac/Linux host.
+
+#### Troubleshooting (SSL Issues):
+If you encounter SSL/TLS certificate errors (common when Fiddler intercepts HTTPS), add the following to your `.env` for local testing:
+```dotenv
+NODE_TLS_REJECT_UNAUTHORIZED=0
+```
+**Warning:** This disables SSL validation. Use it **only** for local development and testing.
