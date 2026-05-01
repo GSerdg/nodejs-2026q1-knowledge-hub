@@ -13,6 +13,7 @@ export class UsageTrackerService {
     summarize: 0,
     translate: 0,
     analyze: 0,
+    generate: 0,
     total: 0,
     totalTokens: 0,
   };

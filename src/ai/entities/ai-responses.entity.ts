@@ -27,6 +27,10 @@ interface AnalyzeArticleResponse {
   severity: Severity;
 }
 
+interface GenerateResponse {
+  text: string;
+}
+
 export class SummarizeArticleEntity implements SummarizeArticleResponse {
   @ApiProperty({ example: randomUUID() })
   articleId!: string;
@@ -64,4 +68,9 @@ export class AnalyzeArticleEntity implements AnalyzeArticleResponse {
 
   @ApiProperty({ enum: Severity, default: Severity.INFO })
   severity!: Severity;
+}
+
+export class GenerateEntity implements GenerateResponse {
+  @ApiProperty({ example: 'generated text' })
+  text!: string;
 }

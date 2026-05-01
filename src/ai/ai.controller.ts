@@ -22,6 +22,7 @@ import { SummarizeArticleDto } from './dto/summarize-article.dto';
 import { TranslateArticleDto } from './dto/translate-article.dto';
 import {
   AnalyzeArticleEntity,
+  GenerateEntity,
   Severity,
   SummarizeArticleEntity,
   TranslateArticleEntity,
@@ -29,6 +30,7 @@ import {
 import { ArticlePrompts } from './prompts/article-prompts';
 import { GeminiService } from './services/gemini.service';
 import { CacheService } from './services/cache.service';
+import { GenerateDto } from './dto/generate.dto';
 
 @ApiTags('ai')
 @ApiBearerAuth('access-token')
@@ -196,5 +198,27 @@ export class AiController {
         severity: Severity.INFO,
       };
     }
+  }
+
+  @Public()
+  @Post('generate')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Generate text' })
+  @ApiResponse({
+    status: 200,
+    description: 'generate',
+    type: GenerateEntity,
+  })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
+  @ApiResponse({ status: 503, description: 'Service unavailable' })
+  async generate(@Body() generateDto: GenerateDto): Promise<GenerateEntity> {
+    const text = await this.geminiService.generateText(
+      generateDto.prompt,
+      'generate',
+    );
+
+    return {
+      text: text ?? '',
+    };
   }
 }
