@@ -9,6 +9,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   providers: [
@@ -32,6 +33,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     CategoryModule,
     CommentModule,
     PrismaModule,
+    AiModule,
   ],
 })
 export class AppModule {}

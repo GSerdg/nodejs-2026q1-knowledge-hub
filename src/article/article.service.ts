@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, Role } from '@prisma/client';
+import { Article, Prisma, Role } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ArticleQueryDto } from './dto/article-query.dto';
 import { CreateArticleDto } from './dto/create-article.dto';
@@ -7,6 +7,7 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { PRISMA_ERROR_CODES } from 'src/prisma/prisma-error-codes';
 import { convertTimestamp } from 'src/utils/convertTimestamp';
 import { ForbiddenError, NotFoundError } from 'src/common/errors/custom-error';
+import { ArticleEntity } from './entities/article.entity';
 
 @Injectable()
 export class ArticleService {
@@ -50,7 +51,7 @@ export class ArticleService {
       throw new NotFoundError(`Article with id ${id} not found`);
     }
 
-    const converted = convertTimestamp(article);
+    const converted = convertTimestamp<Article>(article) as ArticleEntity;
 
     return {
       ...converted,

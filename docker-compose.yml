@@ -10,9 +10,13 @@ services:
       - '${PORT:-4000}:${PORT:-4000}'
     env_file:
       - .env
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     environment:
       - NODE_ENV=production
       - IS_DOCKER=true
+      - PROXY_HOST=host.docker.internal
+      - PROXY_PORT=8888
       # - POSTGRES_HOST=db
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}?schema=public
     depends_on:

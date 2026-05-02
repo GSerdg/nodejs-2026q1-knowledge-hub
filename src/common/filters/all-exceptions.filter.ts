@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AppError } from '../errors/custom-error';
+import { ThrottlerException } from '@nestjs/throttler';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -24,6 +25,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
       statusCode = exception.statusCode;
       message = exception.message;
       error = exception.name;
+    } else if (exception instanceof ThrottlerException) {
+      statusCode = HttpStatus.TOO_MANY_REQUESTS;
+      message = 'Rate limit exceeded. Try again in a minute.';
+      error = 'Too Many Requests';
+      response.header('Retry-After', '60');
     } else if (
       exception.getStatus &&
       typeof exception.getStatus === 'function'
