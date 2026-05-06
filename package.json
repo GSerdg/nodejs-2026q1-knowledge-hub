@@ -29,6 +29,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@nestjs/axios": "^4.0.1",
     "@nestjs/cache-manager": "^3.1.2",
     "@nestjs/common": "^10.4.15",
@@ -42,6 +43,7 @@
     "@nestjs/throttler": "^6.5.0",
     "@prisma/adapter-pg": "^6.19.3",
     "@prisma/client": "^6.19.3",
+    "@qdrant/js-client-rest": "^1.17.0",
     "axios": "^1.15.2",
     "bcrypt": "^5.1.1",
     "cache-manager": "^7.2.8",
@@ -49,6 +51,7 @@
     "class-validator": "^0.14.4",
     "dotenv": "^16.6.1",
     "http-status-codes": "^2.2.0",
+    "langchain": "^1.4.0",
     "nest-winston": "^1.10.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
