@@ -8,6 +8,7 @@ import {
   RagSearchRequestDto,
   RagChatRequestDto,
 } from '../dto/rag.dto';
+import { NotFoundError } from 'src/common/errors/custom-error';
 
 @Injectable()
 export class RagService {
@@ -133,6 +134,14 @@ export class RagService {
   }
 
   async deleteArticleFromIndex(articleId: string) {
+    const exists = await this.vectorDb.existsByArticleId(articleId);
+
+    if (!exists) {
+      throw new NotFoundError(
+        `Article with ID ${articleId} not found in vector index`,
+      );
+    }
+
     await this.vectorDb.deleteByArticleId(articleId);
   }
 }

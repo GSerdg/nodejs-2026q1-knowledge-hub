@@ -62,6 +62,22 @@ export class VectorDbService implements OnModuleInit {
     }
   }
 
+  async existsByArticleId(articleId: string): Promise<boolean> {
+    try {
+      const result = await this.client.scroll(this.collectionName, {
+        filter: {
+          must: [{ key: 'articleId', match: { value: articleId } }],
+        },
+        limit: 1,
+        with_payload: false,
+        with_vector: false,
+      });
+      return result.points.length > 0;
+    } catch {
+      throw new ServiceUnavailableError('Vector DB is unavailable');
+    }
+  }
+
   async deleteByArticleId(articleId: string) {
     try {
       await this.client.delete(this.collectionName, {
