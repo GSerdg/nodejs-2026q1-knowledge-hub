@@ -29,19 +29,31 @@ export class GoogleAiService {
     return result.embedding.values;
   }
 
-  async generateRagAnswer(question: string, context: string): Promise<string> {
+  async generateRagAnswer(
+    question: string,
+    context: string,
+    history: string[] = [],
+  ): Promise<string> {
+    const historyText =
+      history.length > 0
+        ? `CONVERSATION HISTORY:\n${history.join('\n')}\n`
+        : '';
+
     const prompt = `
-      You are a Knowledge Hub assistant. Use the following pieces of retrieved context to answer the question. 
-      If you don't know the answer based on the context, just say that you don't know. 
-      
-      CONTEXT:
-      ${context}
-      
-      QUESTION:
-      ${question}
-      
-      ANSWER:
-    `;
+    You are a Knowledge Hub assistant. 
+    Use the following retrieved context and conversation history to answer the question.
+    If the answer is not in the context, say you don't know.
+
+    ${historyText}
+    
+    CONTEXT:
+    ${context}
+    
+    QUESTION:
+    ${question}
+    
+    ANSWER:
+  `;
 
     const result = await this.chatModel.generateContent(prompt);
 

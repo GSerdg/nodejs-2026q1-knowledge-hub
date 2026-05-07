@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ChunkingService } from './chunking.service';
 import { GoogleAiService } from './google-ai.service';
@@ -9,15 +9,25 @@ import {
   RagChatRequestDto,
 } from '../dto/rag.dto';
 import { NotFoundError } from 'src/common/errors/custom-error';
+import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class RagService {
+  private readonly maxMessages: number;
+
   constructor(
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private readonly chunkingService: ChunkingService,
     private readonly googleAi: GoogleAiService,
     private readonly vectorDb: VectorDbService,
-  ) {}
+  ) {
+    this.maxMessages = Number(
+      this.configService.get('RAG_CONVERSATION_MAX_MESSAGES', 20),
+    );
+  }
 
   async indexArticles(params: ReindexRequestDto) {
     const { onlyPublished = true, articleIds } = params;
@@ -102,25 +112,31 @@ export class RagService {
   }
 
   async chat(params: RagChatRequestDto) {
+    const conversationId = params.conversationId || crypto.randomUUID();
+
+    const historyKey = `chat_history_${conversationId}`;
+    let history = (await this.cacheManager.get<string[]>(historyKey)) || [];
+
     const searchData = await this.search({ query: params.question, limit: 5 });
-
-    if (searchData.results.length === 0) {
-      return {
-        answer:
-          "I'm sorry, I couldn't find any relevant information in the knowledge base.",
-        sources: [],
-        conversationId: params.conversationId || crypto.randomUUID(),
-      };
-    }
-
     const context = searchData.results
-      .map((r) => `Source: ${r.articleTitle}\nContent: ${r.chunk}`)
+      .map(
+        (result) => `Source: ${result.articleTitle}\nContent: ${result.chunk}`,
+      )
       .join('\n\n');
 
     const answer = await this.googleAi.generateRagAnswer(
       params.question,
       context,
+      history,
     );
+
+    history.push(`User: ${params.question}`, `AI: ${answer}`);
+
+    if (history.length > this.maxMessages) {
+      history = history.slice(-this.maxMessages);
+    }
+
+    await this.cacheManager.set(historyKey, history);
 
     return {
       answer,
@@ -129,7 +145,7 @@ export class RagService {
         articleTitle: r.articleTitle,
         relevantChunk: r.chunk,
       })),
-      conversationId: params.conversationId || crypto.randomUUID(),
+      conversationId,
     };
   }
 
@@ -143,5 +159,15 @@ export class RagService {
     }
 
     await this.vectorDb.deleteByArticleId(articleId);
+  }
+
+  async getConversationHistory(conversationId: string) {
+    const history = await this.cacheManager.get<string[]>(
+      `chat_history_${conversationId}`,
+    );
+
+    if (!history) throw new NotFoundError('History not found');
+
+    return { conversationId, history };
   }
 }

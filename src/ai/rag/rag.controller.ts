@@ -6,6 +6,8 @@ import {
   Param,
   HttpCode,
   HttpStatus,
+  Get,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { RagService } from './services/rag.service';
 import {
@@ -93,8 +95,16 @@ export class RagController {
     description: 'article/index entries are not found',
   })
   async deleteArticleIndex(
-    @Param('articleId') articleId: string,
+    @Param('articleId', new ParseUUIDPipe({ version: '4' })) articleId: string,
   ): Promise<void> {
     await this.ragService.deleteArticleFromIndex(articleId);
+  }
+
+  @Get('chat/:conversationId/history')
+  async getHistory(
+    @Param('conversationId', new ParseUUIDPipe({ version: '4' }))
+    conversationId: string,
+  ) {
+    return await this.ragService.getConversationHistory(conversationId);
   }
 }
