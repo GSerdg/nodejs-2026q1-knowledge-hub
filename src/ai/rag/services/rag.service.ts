@@ -76,7 +76,7 @@ export class RagService {
   }
 
   async search(params: RagSearchRequestDto) {
-    const queryVector = await this.googleAi.getEmbedding(params.query);
+    const queryVector = await this.googleAi.getEmbedding(params.query, true);
 
     const filter: any = { must: [] };
     if (params.articleStatus) {

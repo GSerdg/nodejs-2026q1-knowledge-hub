@@ -27,7 +27,7 @@ export class VectorDbService implements OnModuleInit {
 
       if (!exists) {
         await this.client.createCollection(this.collectionName, {
-          vectors: { size: 768, distance: 'Cosine' },
+          vectors: { size: 3072, distance: 'Cosine' },
         });
       }
     } catch (error) {

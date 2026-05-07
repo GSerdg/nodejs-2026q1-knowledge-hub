@@ -20,13 +20,23 @@ export class GoogleAiService {
     );
   }
 
-  async getEmbedding(text: string): Promise<number[]> {
+  async getEmbedding(text: string, isQuery = false): Promise<number[]> {
     const model = this.genAI.getGenerativeModel({
       model: this.embeddingModelName,
     });
-    const result = await model.embedContent(text);
 
-    return result.embedding.values;
+    const prefix = isQuery
+      ? 'task: retrieval_query | '
+      : 'task: retrieval_document | ';
+
+    try {
+      const result = await model.embedContent(prefix + text);
+
+      return result.embedding.values;
+    } catch (error) {
+      console.error('Gemini Embedding Error:', error);
+      throw error;
+    }
   }
 
   async generateRagAnswer(
