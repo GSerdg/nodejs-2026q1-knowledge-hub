@@ -22,7 +22,7 @@ import { CacheService } from './services/cache.service';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        ttl: config.get<number>('AI_CACHE_TTL_SEC', 300) * 1000,
+        ttl: config.get<number>('AI_CACHE_TTL_SEC', 300),
       }),
     }),
     HttpModule.register({ timeout: 30000, maxRedirects: 5 }),

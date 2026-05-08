@@ -196,3 +196,81 @@ If you encounter SSL/TLS certificate errors (common when Fiddler intercepts HTTP
 NODE_TLS_REJECT_UNAUTHORIZED=0
 ```
 **Warning:** This disables SSL validation. Use it **only** for local development and testing.
+
+## Knowledge Hub RAG & Vector Database
+
+This project uses a Retrieval-Augmented Generation (RAG) system. The AI answers questions based on articles in the local database.
+
+### 1. Vector Database Setup (Qdrant)
+
+The system uses Qdrant as an external vector database. Qdrant runs in a dedicated Docker container.
+
+*   **URL**: `http://localhost:6333` (Local) / `http://vectordb:6333` (Docker)
+*   **Dashboard**: http://localhost:6333/dashboard
+*   **Models**: The system uses `gemini-embedding-2` to generate 3072-dimensional vectors.
+
+### 2. Additional Environment Setup
+
+Add these RAG-specific variables to your `.env` file:
+
+```dotenv
+# RAG Models & Keys
+GEMINI_EMBEDDING_MODEL=gemini-embedding-2
+
+# Vector DB Configuration
+RAG_VECTOR_DB_URL=http://localhost:6333
+RAG_VECTOR_COLLECTION=knowledge_hub_articles
+
+# Chunking & Memory Settings
+RAG_CHUNK_SIZE=800
+RAG_CHUNK_OVERLAP=200
+RAG_CONVERSATION_MAX_MESSAGES=20
+```
+
+### 3. RAG Core Flow & Endpoints
+
+#### Step 1: Indexing Data
+
+Before chatting, synchronize your articles with the vector database:
+
+*   **Index Articles:** `POST /ai/rag/index`
+    *   Body: `{"onlyPublished": true}` (default)
+    *   This splits content into chunks, generates embeddings, and stores them in Qdrant.
+
+#### Step 2: Semantic Search
+
+Search for content by meaning rather than keywords:
+
+*   **Search:** `POST /ai/rag/search`
+    *   Body: `{"query": "Why is Bitcoin limited?", "limit": 5}`
+
+#### Step 3: Chat with Knowledge Base
+
+Ask questions based on your articles:
+
+*   **Chat:** `POST /ai/rag/chat`
+    *   Body: `{"question": "What are the environmental concerns?", "conversationId": "optional-uuid"}`
+    *   Returns an answer with **Source Attribution** (links to relevant articles).
+
+#### Step 4: Maintenance
+
+*   **Delete from Index:** `DELETE /ai/rag/index/articles/:articleId`
+    *   Removes all vector entries for a specific article.
+
+### 4. Startup Flow after Clone
+
+1.  **Environment**: Set `GEMINI_API_KEY` and `RAG_VECTOR_DB_URL`.
+2.  **Launch Infrastructure**:
+
+    ```bash
+    docker compose up -d db vectordb
+    ```
+3.  **Start App**: `npm run start:dev`
+4.  **Build Vector Index**: Send a `POST` request to `http://localhost:4000/ai/rag/index`.
+5.  **Start Chatting**: Use the `/ai/rag/chat` endpoint.
+
+### 5. RAG Specific Limitations & Notes
+
+*   **Embedding Dimension**: The system is pre-configured for **3072** dimensions (Gemini 2). If you change the model, delete the Qdrant collection using `curl -X DELETE http://localhost:6333/collections/knowledge_hub_articles`.
+*   **Task Prefixes**: The system automatically adds `task: retrieval_document` for indexing and `task: retrieval_query` for searching for `gemini-embedding-2`.
+*   **Conversation Memory**: Chat history is stored in-memory (CacheManager). If the server restarts, conversation context is lost, but the vector index remains persistent in Docker volumes.

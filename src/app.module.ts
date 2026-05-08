@@ -10,6 +10,8 @@ import { AuthModule } from './auth/auth.module';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { AiModule } from './ai/ai.module';
+import { RagModule } from './ai/rag/rag.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   providers: [
@@ -27,6 +29,7 @@ import { AiModule } from './ai/ai.module';
     },
   ],
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
     UserModule,
     ArticleModule,
@@ -34,6 +37,7 @@ import { AiModule } from './ai/ai.module';
     CommentModule,
     PrismaModule,
     AiModule,
+    RagModule,
   ],
 })
 export class AppModule {}
